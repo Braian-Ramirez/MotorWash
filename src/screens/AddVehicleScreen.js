@@ -1,36 +1,53 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
-// Importamos el Picker que acabas de instalar
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
+// Importamos el Picker que instalaste
 import { Picker } from '@react-native-picker/picker';
 
-export default function AddVehicleScreen({ navigation }) {
+// Ahora recibimos "route" además de "navigation"
+export default function AddVehicleScreen({ route, navigation }) {
+
+    // Extraemos los datos si vienen de "Editar". Si es "Agregar", esto será "undefined"
+    const vehiculoAEditar = route.params?.vehiculoAEditar;
+
     // Estados para cada uno de los campos
-    const [tipo, setTipo] = useState('Carro'); // Valor por defecto
-    const [color, setColor] = useState('');
-    const [marca, setMarca] = useState('');
-    const [placa, setPlaca] = useState('');
+    // Si viene un vehículo a editar, usamos sus datos. Si no, usamos texto vacío (Modo Agregar)
+    const [tipo, setTipo] = useState(vehiculoAEditar ? vehiculoAEditar.tipo : 'Carro');
+    const [color, setColor] = useState(vehiculoAEditar ? vehiculoAEditar.color : '');
+    const [marca, setMarca] = useState(vehiculoAEditar ? vehiculoAEditar.marca : '');
+    const [placa, setPlaca] = useState(vehiculoAEditar ? vehiculoAEditar.placa : '');
 
     const handleSave = () => {
-        console.log("Guardando:", tipo, color, marca, placa);
-        // Aquí enviaríamos los datos a la base de datos.
-        alert('Vehículo guardado con éxito!');
-        // Volvemos a la pantalla anterior (Mis Vehículos)
+        if (!color || !marca || !placa) {
+            Alert.alert("Error", "Todos los campos son obligatorios.");
+            return;
+        }
+
+        if (vehiculoAEditar) {
+            console.log("Actualizando vehículo existente:", vehiculoAEditar.id, tipo, color, marca, placa);
+            Alert.alert('Éxito', 'Vehículo actualizado con éxito.');
+        } else {
+            console.log("Creando vehículo nuevo:", tipo, color, marca, placa);
+            Alert.alert('Éxito', 'Vehículo guardado con éxito.');
+        }
+
+        // Volvemos a la pantalla anterior
         navigation.goBack();
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Nuevo Vehículo</Text>
+            {/* El Título cambia dinámicamente según si estamos editando o agredando */}
+            <Text style={styles.title}>
+                {vehiculoAEditar ? 'Editar Vehículo' : 'Nuevo Vehículo'}
+            </Text>
 
             <View style={styles.pickerContainer}>
                 <Text style={styles.label}>Tipo de Vehículo:</Text>
-                {/* Así funciona el Picker: recibe un valor seleccionado y una función para cambiarlo */}
                 <Picker
                     selectedValue={tipo}
                     onValueChange={(itemValue) => setTipo(itemValue)}
                     style={styles.picker}
                 >
-                    {/* Y aquí definimos las opciones del desplegable */}
                     <Picker.Item label="Carro" value="Carro" />
                     <Picker.Item label="Camioneta" value="Camioneta" />
                     <Picker.Item label="Motocicleta" value="Moto" />
@@ -42,7 +59,9 @@ export default function AddVehicleScreen({ navigation }) {
             <TextInput style={styles.input} placeholder="Placa (Ej: ABC-123)" value={placa} onChangeText={setPlaca} autoCapitalize="characters" />
 
             <TouchableOpacity style={styles.buttonPrimary} onPress={handleSave}>
-                <Text style={styles.buttonText}>Guardar Vehículo</Text>
+                <Text style={styles.buttonText}>
+                    {vehiculoAEditar ? 'Actualizar Vehículo' : 'Guardar Vehículo'}
+                </Text>
             </TouchableOpacity>
         </View>
     );

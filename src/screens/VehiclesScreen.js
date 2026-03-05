@@ -11,8 +11,9 @@ export default function VehiclesScreen({ navigation }) {
     ]);
 
     // Funciones vacías para cuando toquemos los botones
-    const handleEdit = (id) => {
-        console.log("Vamos a editar el vehículo ID:", id);
+    const handleEdit = (vehiculo) => {
+        // En vez de solo hacer print, navegamos a AddVehicle y le enviamos el objeto entero
+        navigation.navigate('AddVehicle', { vehiculoAEditar: vehiculo });
     };
 
     const handleAddVehicle = () => {
@@ -44,7 +45,7 @@ export default function VehiclesScreen({ navigation }) {
                     <Text style={styles.cardText}>Placa: <Text style={styles.cardData}>{vehiculo.placa}</Text></Text>
 
                     {/* Botón Editar que está dentro de cada tarjeta */}
-                    <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(vehiculo.id)}>
+                    <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(vehiculo)}>
                         <Text style={styles.editButtonText}>Editar</Text>
                     </TouchableOpacity>
 
