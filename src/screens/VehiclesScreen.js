@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useContext } from 'react';
 // ScrollView permite que la pantalla se pueda deslizar si hay muchas tarjetas
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { VehiclesContext } from './context/VehiclesContext';
 
 export default function VehiclesScreen({ navigation }) {
-    // Simulamos una base de datos con los dos vehículos iniciales de tu PDF
-    const [vehiculos, setVehiculos] = useState([
-        { id: 1, tipo: 'Carro', color: 'Rojo', marca: 'Toyota', placa: 'ABC-123' },
-        { id: 2, tipo: 'Camioneta', color: 'Gris', marca: 'Ford', placa: 'XYZ-987' },
-    ]);
+
+    // Extraemos la lista de vehículos de la nube
+    const { vehiculos } = useContext(VehiclesContext);
 
     // Funciones vacías para cuando toquemos los botones
     const handleEdit = (vehiculo) => {

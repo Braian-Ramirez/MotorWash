@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
 // Importamos el Picker que instalaste
 import { Picker } from '@react-native-picker/picker';
+import { VehiclesContext } from './context/VehiclesContext';
 
 // Ahora recibimos "route" además de "navigation"
 export default function AddVehicleScreen({ route, navigation }) {
 
-    // Extraemos los datos si vienen de "Editar". Si es "Agregar", esto será "undefined"
+    // 1. PRIMERO: Extraemos el vehículo de la maleta (si es que viene uno para editar)
     const vehiculoAEditar = route.params?.vehiculoAEditar;
+
+    // 2. SEGUNDO: Sacamos las funciones de la nube (Asegúrate que terminen en 'e', no en 'o')
+    const { addVehicle, updateVehicle } = useContext(VehiclesContext);
 
     // Estados para cada uno de los campos
     // Si viene un vehículo a editar, usamos sus datos. Si no, usamos texto vacío (Modo Agregar)
@@ -22,17 +26,23 @@ export default function AddVehicleScreen({ route, navigation }) {
             return;
         }
 
+        // Creamos el objeto con los datos de los inputs
+        const datosVehiculo = { tipo, color, marca, placa };
+
         if (vehiculoAEditar) {
-            console.log("Actualizando vehículo existente:", vehiculoAEditar.id, tipo, color, marca, placa);
+            // SI ESTAMOS EDITANDO: 
+            // Le pasamos el ID que ya tenía para que el contexto sepa cuál reemplazar
+            updateVehicle({ ...datosVehiculo, id: vehiculoAEditar.id });
             Alert.alert('Éxito', 'Vehículo actualizado con éxito.');
         } else {
-            console.log("Creando vehículo nuevo:", tipo, color, marca, placa);
+            // SI ES NUEVO:
+            addVehicle(datosVehiculo);
             Alert.alert('Éxito', 'Vehículo guardado con éxito.');
         }
 
-        // Volvemos a la pantalla anterior
         navigation.goBack();
     };
+
 
     return (
         <View style={styles.container}>
