@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 // Reutilizamos la misma librería de íconos
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { VisitsContext } from './context/VisitsContext';
 
 export default function AgendaScreen({ navigation }) {
     // Simulamos que el usuario ha lavado su carro 3 veces
@@ -9,12 +10,8 @@ export default function AgendaScreen({ navigation }) {
     const lavadasParaPremio = 5; // El total necesario para el premio
 
     // Simulamos una visita ya programada
-    const visitaProgramada = {
-        fecha: '15/10/2026',
-        tipoLavado: 'Lavado Completo + Encerado',
-        encargado: 'Carlos Ruiz',
-        vehiculo: 'Toyota Rojo (ABC-123)'
-    };
+    // Extraemos la lista real de visitas
+    const { visitas } = useContext(VisitsContext);
 
     const handleAgendar = () => {
         console.log("Ir a la pantalla de Nueva Visita");
@@ -43,18 +40,21 @@ export default function AgendaScreen({ navigation }) {
                 </Text>
             </View>
 
-            {/* 3. Tarjeta de las Visitas */}
+            {/* 3. Lista de Visitas */}
             <View style={styles.cardHeader}>
                 <Text style={styles.sectionTitle}>Mis Visitas</Text>
                 <MaterialCommunityIcons name="calendar-clock" size={24} color="#0066cc" />
             </View>
 
-            <View style={styles.card}>
-                <Text style={styles.cardText}>Fecha: <Text style={styles.cardData}>{visitaProgramada.fecha}</Text></Text>
-                <Text style={styles.cardText}>Tipo de lavado: <Text style={styles.cardData}>{visitaProgramada.tipoLavado}</Text></Text>
-                <Text style={styles.cardText}>Encargado: <Text style={styles.cardData}>{visitaProgramada.encargado}</Text></Text>
-                <Text style={styles.cardText}>Vehículo: <Text style={styles.cardData}>{visitaProgramada.vehiculo}</Text></Text>
-            </View>
+            {/* Ahora recorremos el arreglo de visitas y generamos una tarjeta para cada una */}
+            {visitas.map((visita) => (
+                <View key={visita.id} style={styles.card}>
+                    <Text style={styles.cardText}>Fecha: <Text style={styles.cardData}>{visita.fecha}</Text></Text>
+                    <Text style={styles.cardText}>Tipo de lavado: <Text style={styles.cardData}>{visita.tipoLavado}</Text></Text>
+                    <Text style={styles.cardText}>Encargado: <Text style={styles.cardData}>{visita.encargado}</Text></Text>
+                    <Text style={styles.cardText}>Vehículo: <Text style={styles.cardData}>{visita.vehiculo}</Text></Text>
+                </View>
+            ))}
 
             {/* 4. Botón verde para Agendar (como en tu dibujo) */}
             <TouchableOpacity style={styles.addButton} onPress={handleAgendar}>
