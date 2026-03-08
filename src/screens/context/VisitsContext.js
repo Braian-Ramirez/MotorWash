@@ -17,11 +17,15 @@ export const VisitsProvider = ({ children }) => {
     // Función para agendar una nueva visita
     const addVisit = (nuevaVisita) => {
         nuevaVisita.id = Date.now(); // ID único temporal
+        nuevaVisita.estado = 'pendiente';
         setVisitas([...visitas, nuevaVisita]);
     };
 
+    const completarVisita = (id) => {
+        setVisitas(visitas.map(v => v.id === id ? { ...v, estado: 'completado' } : v));
+    };
     return (
-        <VisitsContext.Provider value={{ visitas, addVisit }}>
+        <VisitsContext.Provider value={{ visitas, addVisit, completarVisita }}>
             {children}
         </VisitsContext.Provider>
     );

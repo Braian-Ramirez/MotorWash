@@ -1,13 +1,29 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { AuthContext } from './context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const { login } = useContext(AuthContext);
 
     const handleLogin = () => {
-        console.log("Iniciando sesión con:", email, password);
-        navigation.navigate('Home');
+        if (!email || !password) {
+            Alert.alert("Error", "Por favor ingresa correo y contraseña.");
+            return;
+        }
+
+        // Llamamos a la función de login del contexto
+        const role = login(email);
+
+        console.log("Sesión iniciada como:", role);
+
+        // Navegamos según el rol detectado
+        if (role === 'employee') {
+            navigation.navigate('EmployeeHome');
+        } else {
+            navigation.navigate('Home');
+        }
     };
 
     const handleRegister = () => {

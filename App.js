@@ -9,61 +9,72 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import AddVehicleScreen from './src/screens/AddVehicleScreen';
 import NewVisitScreen from './src/screens/NewVisitScreen';
 import VisitQRScreen from './src/screens/VisitQRScreen';
-// Importamos el grupo de pestañas del cliente
+
+// Importamos el grupo de pestañas
 import ClientTabs from './src/screens/navigation/ClientTabs';
+import EmployeeTabs from './src/screens/navigation/EmployeeTabs';
+
+// Contextos
 import { VehiclesProvider } from './src/screens/context/VehiclesContext';
 import { VisitsProvider } from './src/screens/context/VisitsContext';
+import { AuthProvider } from './src/screens/context/AuthContext';
 
 // 3. Creamos el objeto "Stack" que manejará nuestra pila de pantallas
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    // NavigationContainer debe envolver TODA la aplicación (solo se usa una vez)
-    <VehiclesProvider>
-      <VisitsProvider>
-        <NavigationContainer>
-          {/* Stack.Navigator contiene todas nuestras pantallas */}
-          <Stack.Navigator initialRouteName="Login">
+    <AuthProvider>
+      <VehiclesProvider>
+        <VisitsProvider>
+          <NavigationContainer>
+            <Stack.Navigator initialRouteName="Login">
 
-            {/* Definimos la primera pantalla: Login */}
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ headerShown: false }} // Ocultamos la barra superior (header) en el login
-            />
+              <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{ headerShown: false }}
+              />
 
-            <Stack.Screen
-              name="Register"
-              component={RegisterScreen}
-              options={{ headerShown: false }} // Ocultamos la barra superior (header) en el registro
-            />
+              <Stack.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{ headerShown: false }}
+              />
 
-            {/* Home ahora carga las pestañas en lugar de una pantalla simple */}
-            <Stack.Screen
-              name="Home"
-              component={ClientTabs}
-              options={{ headerShown: false }} // Ocultamos el header del Stack porque el Tab ya trae el suyo
-            />
+              {/* Pantalla principal para Clientes */}
+              <Stack.Screen
+                name="Home"
+                component={ClientTabs}
+                options={{ headerShown: false }}
+              />
 
-            <Stack.Screen name="AddVehicle"
-              component={AddVehicleScreen}
-              options={{ title: 'Agregar Vehículo' }}
-            />
+              {/* Pantalla principal para Empleados */}
+              <Stack.Screen
+                name="EmployeeHome"
+                component={EmployeeTabs}
+                options={{ headerShown: false }}
+              />
 
-            <Stack.Screen name="NewVisit"
-              component={NewVisitScreen}
-              options={{ title: 'Agendar Visita' }}
-            />
+              <Stack.Screen name="AddVehicle"
+                component={AddVehicleScreen}
+                options={{ title: 'Agregar Vehículo' }}
+              />
 
-            <Stack.Screen name="VisitQR"
-              component={VisitQRScreen}
-              options={{ title: 'Tu Código QR', headerShown: false }} // Sin header para que se vea más limpio
-            />
+              <Stack.Screen name="NewVisit"
+                component={NewVisitScreen}
+                options={{ title: 'Agendar Visita' }}
+              />
 
-          </Stack.Navigator>
-        </NavigationContainer>
-      </VisitsProvider>
-    </VehiclesProvider>
+              <Stack.Screen name="VisitQR"
+                component={VisitQRScreen}
+                options={{ title: 'Tu Código QR', headerShown: false }}
+              />
+
+            </Stack.Navigator>
+          </NavigationContainer>
+        </VisitsProvider>
+      </VehiclesProvider>
+    </AuthProvider>
   );
 }
