@@ -5,7 +5,7 @@ import { useContext } from 'react';
 import { AuthContext } from './context/AuthContext';
 import { VisitsContext } from './context/VisitsContext';
 
-export default function ActiveJobsScreen() {
+export default function ActiveJobsScreen({ navigation }) {
     const { visitas, completarVisita } = useContext(VisitsContext);
     const trabajosPendientes = visitas.filter(job => job.estado !== 'completado');
 
@@ -25,6 +25,13 @@ export default function ActiveJobsScreen() {
             <View style={styles.header}>
                 <MaterialCommunityIcons name="car-wash" size={50} color="#3b5998" />
                 <Text style={styles.text}>Trabajos de Hoy</Text>
+                <TouchableOpacity
+                    style={styles.scannerButton}
+                    onPress={() => navigation.navigate('ScanQR')}
+                >
+                    <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
+                    <Text style={styles.buttonTextWhite}> Escanear Ticket QR</Text>
+                </TouchableOpacity>
             </View>
 
             {/* 🚀 AQUÍ ESTÁ EL MAPA: Generamos una tarjeta por cada visita */}
@@ -82,7 +89,18 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
     },
-    buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 }
+    buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+
+    scannerButton: {
+        backgroundColor: '#3b5998',
+        flexDirection: 'row',
+        padding: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginLeft: 10
+    },
+    buttonTextWhite: { color: '#fff', fontWeight: 'bold' },
+
 });
 
 

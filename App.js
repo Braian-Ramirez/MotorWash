@@ -9,6 +9,7 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import AddVehicleScreen from './src/screens/AddVehicleScreen';
 import NewVisitScreen from './src/screens/NewVisitScreen';
 import VisitQRScreen from './src/screens/VisitQRScreen';
+import QRScannerScreen from './src/screens/QRScannerScreen';
 
 // Importamos el grupo de pestañas
 import ClientTabs from './src/screens/navigation/ClientTabs';
@@ -71,6 +72,10 @@ export default function App() {
                 options={{ title: 'Tu Código QR', headerShown: false }}
               />
 
+              <Stack.Screen name="ScanQR"
+                component={QRScannerScreen}
+                options={{ title: 'Escanea código QR' }}
+              />
             </Stack.Navigator>
           </NavigationContainer>
         </VisitsProvider>
