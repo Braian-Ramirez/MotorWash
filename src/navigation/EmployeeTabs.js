@@ -2,9 +2,9 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import ProfileScreen from '../ProfileScreen';
-import ActiveJobsScreen from '../ActiveJobsScreen';
-import HistoryScreen from '../HistoryScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import ActiveJobsScreen from '../screens/ActiveJobsScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 
 // Pantallas placeholder para el empleado
 

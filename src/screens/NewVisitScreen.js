@@ -2,8 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { VisitsContext } from './context/VisitsContext';
-import { VehiclesContext } from './context/VehiclesContext';
+import { VisitsContext } from '../context/VisitsContext';
+import { VehiclesContext } from '../context/VehiclesContext';
 
 export default function NewVisitScreen({ navigation }) {
 

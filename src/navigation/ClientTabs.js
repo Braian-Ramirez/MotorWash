@@ -3,9 +3,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // 1. Importamos la librería de íconos (usaremos MaterialCommunityIcons que tiene muchos de autos)
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import ProfileScreen from '../ProfileScreen';
-import VehiclesScreen from '../VehiclesScreen';
-import AgendaScreen from '../AgendaScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import VehiclesScreen from '../screens/VehiclesScreen';
+import AgendaScreen from '../screens/AgendaScreen';
 
 const Tab = createBottomTabNavigator();
 

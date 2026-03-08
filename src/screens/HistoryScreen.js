@@ -2,8 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useContext } from 'react';
-import { AuthContext } from './context/AuthContext';
-import { VisitsContext } from './context/VisitsContext';
+import { AuthContext } from '../context/AuthContext';
+import { VisitsContext } from '../context/VisitsContext';
 
 export default function HistoryScreen() {
     const { visitas, completarVisita } = useContext(VisitsContext);

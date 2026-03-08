@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 // Reutilizamos la misma librería de íconos
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { VisitsContext } from './context/VisitsContext';
+import { VisitsContext } from '../context/VisitsContext';
 
 export default function AgendaScreen({ navigation }) {
     // Simulamos que el usuario ha lavado su carro 3 veces

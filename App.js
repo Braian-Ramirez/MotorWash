@@ -12,13 +12,13 @@ import VisitQRScreen from './src/screens/VisitQRScreen';
 import QRScannerScreen from './src/screens/QRScannerScreen';
 
 // Importamos el grupo de pestañas
-import ClientTabs from './src/screens/navigation/ClientTabs';
-import EmployeeTabs from './src/screens/navigation/EmployeeTabs';
+import ClientTabs from './src/navigation/ClientTabs';
+import EmployeeTabs from './src/navigation/EmployeeTabs';
 
 // Contextos
-import { VehiclesProvider } from './src/screens/context/VehiclesContext';
-import { VisitsProvider } from './src/screens/context/VisitsContext';
-import { AuthProvider } from './src/screens/context/AuthContext';
+import { VehiclesProvider } from './src/context/VehiclesContext';
+import { VisitsProvider } from './src/context/VisitsContext';
+import { AuthProvider } from './src/context/AuthContext';
 
 // 3. Creamos el objeto "Stack" que manejará nuestra pila de pantallas
 const Stack = createNativeStackNavigator();
