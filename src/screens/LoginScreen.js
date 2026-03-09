@@ -19,7 +19,9 @@ export default function LoginScreen({ navigation }) {
         console.log("Sesión iniciada como:", role);
 
         // Navegamos según el rol detectado
-        if (role === 'employee') {
+        if (role === 'admin') {
+            navigation.navigate('AdminHome');
+        } else if (role === 'employee') {
             navigation.navigate('EmployeeHome');
         } else {
             navigation.navigate('Home');

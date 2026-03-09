@@ -6,11 +6,23 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
 
     const login = (email) => {
-        // Lógica de detección de rol simple por dominio de correo
-        const role = email.toLowerCase().endsWith('@motorwash.com') ? 'employee' : 'client';
+        let role = 'client'; // Por defecto entrada cliente
+
+        //1. Detección de Admin(correo exacto)
+        if (email.toLowerCase() === 'admin@motorwash.com') {
+            role = 'admin';
+        }
+
+        // 2. Detección de Empleado (dominio de empresa)
+        else if (email.toLowerCase().endsWith('@motorwash.com')) {
+            role = 'employee';
+        }
+
         const userData = { email, role };
+
         setUser(userData);
         return role;
+
     };
 
     const logout = () => {

@@ -4,11 +4,13 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { VisitsContext } from '../context/VisitsContext';
 import { VehiclesContext } from '../context/VehiclesContext';
+import { ServicesContext } from '../context/ServicesContext';
 
 export default function NewVisitScreen({ navigation }) {
 
     const { addVisit } = useContext(VisitsContext);
     const { vehiculos } = useContext(VehiclesContext);
+    const { servicios } = useContext(ServicesContext);
 
     // 1. ESTADOS (Aquí es donde estaba el problema, ya restaurados)
     const [vehiculo, setVehiculo] = useState('');
@@ -94,10 +96,15 @@ export default function NewVisitScreen({ navigation }) {
                 <Text style={styles.label}>Servicio:</Text>
                 <View style={styles.pickerContainer}>
                     <Picker selectedValue={tipoLavado} onValueChange={setTipoLavado}>
-                        <Picker.Item label="Lavado Sencillo ($10)" value="Lavado Sencillo" />
-                        <Picker.Item label="Lavado Completo ($25)" value="Lavado Completo" />
-                        <Picker.Item label="Tapicería ($40)" value="Limpieza Tapiceria" />
+                        {servicios.map((s) => (
+                            <Picker.Item
+                                key={s.id}
+                                label={`${s.titulo} ($${s.precio})`}
+                                value={s.titulo}
+                            />
+                        ))}
                     </Picker>
+
                 </View>
             </View>
 
