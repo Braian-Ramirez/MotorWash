@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 // Reutilizamos la misma librería de íconos
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { VisitsContext } from '../context/VisitsContext';
@@ -9,12 +9,41 @@ export default function AgendaScreen({ navigation }) {
     const [lavadasAcumuladas, setLavadasAcumuladas] = useState(3);
     const lavadasParaPremio = 5; // El total necesario para el premio
 
-    // Simulamos una visita ya programada
-    // Extraemos la lista real de visitas
-    const { visitas } = useContext(VisitsContext);
+    // Extraemos la lista real de visitas y la función de calificación
+    const { visitas, calificarVisita } = useContext(VisitsContext);
+
+    // Estado local para recordar lo que el cliente selecciona antes de darle "Enviar"
+    const [calificacionesTemp, setCalificacionesTemp] = useState({});
+
+    // Función que actualiza las estrellas antes de enviar
+    const handleStarPress = (id, estrellas) => {
+        setCalificacionesTemp(prev => ({
+            ...prev,
+            [id]: { ...prev[id], estrellas }
+        }));
+    };
+
+    // Función que actualiza el texto del comentario antes de enviar
+    const handleCommentChange = (id, comentario) => {
+        setCalificacionesTemp(prev => ({
+            ...prev,
+            [id]: { ...prev[id], comentario }
+        }));
+    };
+
+    // Función para enviar definitivamente
+    const handleSubmitRating = (id) => {
+        const calif = calificacionesTemp[id];
+        if (!calif || !calif.estrellas) {
+            Alert.alert("Aviso", "Por favor selecciona al menos una estrella para calificar el servicio.");
+            return;
+        }
+        // Guardamos todo en el contexto de la base de datos
+        calificarVisita(id, calif.estrellas, calif.comentario || '');
+        Alert.alert("¡Gracias!", "Tu calificación ha sido enviada con éxito.");
+    };
 
     const handleAgendar = () => {
-        console.log("Ir a la pantalla de Nueva Visita");
         navigation.navigate('NewVisit');
     };
 
@@ -47,16 +76,124 @@ export default function AgendaScreen({ navigation }) {
             </View>
 
             {/* Ahora recorremos el arreglo de visitas y generamos una tarjeta para cada una */}
-            {visitas.map((visita) => (
-                <View key={visita.id} style={styles.card}>
-                    <Text style={styles.cardText}>Fecha: <Text style={styles.cardData}>{visita.fecha}</Text></Text>
-                    <Text style={styles.cardText}>Tipo de lavado: <Text style={styles.cardData}>{visita.tipoLavado}</Text></Text>
-                    <Text style={styles.cardText}>Encargado: <Text style={styles.cardData}>{visita.encargado}</Text></Text>
-                    <Text style={styles.cardText}>Vehículo: <Text style={styles.cardData}>{visita.vehiculo}</Text></Text>
-                </View>
-            ))}
+            {visitas.map((visita) => {
+                // ---- Lógica del Temporizador ----
+                let tiempoRestanteStr = null;
+                let progressBarWidth = '0%';
+                let isDelayed = false;
 
-            {/* 4. Botón verde para Agendar (como en tu dibujo) */}
+                if (visita.estado === 'en_progreso' && visita.horaInicio) {
+                    // Tiempo transcurrido en minutos
+                    const minutosTranscurridos = Math.floor((Date.now() - visita.horaInicio) / 60000);
+                    // Tiempo restante estimado
+                    const tiempoEstimado = visita.tiempoEstimado || 30; // Usamos 30 si por alguna razón no tiene
+                    const minutosRestantes = tiempoEstimado - minutosTranscurridos;
+
+                    if (minutosRestantes > 0) {
+                        tiempoRestanteStr = `Faltan aprox. ${minutosRestantes} minutos`;
+                        progressBarWidth = `${(minutosTranscurridos / tiempoEstimado) * 100}%`;
+                    } else {
+                        tiempoRestanteStr = "¡Ya casi terminamos! (Afinando detalles)";
+                        progressBarWidth = "100%";
+                        isDelayed = true;
+                    }
+                }
+                // ---------------------------------
+
+                return (
+                    <View key={visita.id} style={styles.card}>
+                        {/* Estado del Lavado */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+                            <Text style={styles.cardText}>Fecha: <Text style={styles.cardData}>{visita.fecha}</Text></Text>
+                            {visita.estado && (
+                                <View style={[styles.statusBadge, visita.estado === 'en_progreso' ? styles.statusProgress :
+                                    visita.estado === 'completado' ? styles.statusDone : null]}>
+                                    <Text style={styles.statusText}>{visita.estado.toUpperCase()}</Text>
+                                </View>
+                            )}
+                        </View>
+
+                        <Text style={styles.cardText}>Tipo de lavado: <Text style={styles.cardData}>{visita.tipoLavado}</Text></Text>
+                        <Text style={styles.cardText}>Encargado: <Text style={styles.cardData}>{visita.encargado}</Text></Text>
+                        <Text style={styles.cardText}>Vehículo: <Text style={styles.cardData}>{visita.vehiculo}</Text></Text>
+
+                        {/* 🔥 Mostrar el Progreso si está siendo lavado */}
+                        {visita.estado === 'en_progreso' && (
+                            <View style={styles.timerContainer}>
+                                <MaterialCommunityIcons
+                                    name={isDelayed ? "clock-alert" : "clock-fast"}
+                                    size={20}
+                                    color={isDelayed ? "#f44336" : "#ff9800"}
+                                />
+                                <View style={{ flex: 1, marginLeft: 10 }}>
+                                    <Text style={[styles.timeText, isDelayed && { color: '#f44336' }]}>
+                                        {tiempoRestanteStr}
+                                    </Text>
+                                    <View style={styles.miniProgressBarBg}>
+                                        <View style={[styles.miniProgressBarFill, { width: progressBarWidth, backgroundColor: isDelayed ? '#f44336' : '#ff9800' }]} />
+                                    </View>
+                                </View>
+                            </View>
+                        )}
+
+                        {/* ⭐ Mostrar Calificación si el lavado ya terminó */}
+                        {visita.estado === 'completado' && (
+                            <View style={styles.ratingContainer}>
+                                <Text style={styles.ratingText}>
+                                    {visita.calificacion ? 'Tu calificación sobre el servicio:' : '¿Qué tal quedó tu vehículo?'}
+                                </Text>
+                                <View style={styles.starsRow}>
+                                    {[1, 2, 3, 4, 5].map((star) => {
+                                        // Estrellas doradas si ya se envió la reseña, o si seleccionó temporalmente
+                                        const ratingValue = visita.calificacion || (calificacionesTemp[visita.id]?.estrellas || 0);
+                                        return (
+                                            <TouchableOpacity
+                                                key={star}
+                                                onPress={() => handleStarPress(visita.id, star)}
+                                                disabled={!!visita.calificacion} // Se bloquean si ya se envío al sistema
+                                            >
+                                                <MaterialCommunityIcons
+                                                    name={ratingValue >= star ? "star" : "star-outline"}
+                                                    size={32}
+                                                    color={ratingValue >= star ? "#ffc107" : "#ccc"}
+                                                />
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+
+                                {/* Zona interactiva antes de Enviar */}
+                                {!visita.calificacion && (
+                                    <View style={{ width: '100%', marginTop: 15 }}>
+                                        <TextInput
+                                            style={styles.commentInput}
+                                            placeholder="Observaciones (opcional)..."
+                                            value={calificacionesTemp[visita.id]?.comentario || ''}
+                                            onChangeText={(text) => handleCommentChange(visita.id, text)}
+                                            multiline
+                                        />
+                                        <TouchableOpacity
+                                            style={styles.submitRatingButton}
+                                            onPress={() => handleSubmitRating(visita.id)}
+                                        >
+                                            <Text style={styles.submitRatingText}>Enviar Calificación</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+
+                                {/* Mostrar observaciones ya enviadas si existen */}
+                                {visita.calificacion && visita.comentario ? (
+                                    <Text style={styles.savedCommentText}>
+                                        <Text style={{ fontWeight: 'bold' }}>Comentario:</Text> {visita.comentario}
+                                    </Text>
+                                ) : null}
+                            </View>
+                        )}
+                    </View>
+                );
+            })}
+
+            {/* 4. Botón verde para Agendar */}
             <TouchableOpacity style={styles.addButton} onPress={handleAgendar}>
                 <Text style={styles.addButtonText}>Agendar Nueva Visita</Text>
             </TouchableOpacity>
@@ -74,14 +211,12 @@ const styles = StyleSheet.create({
         padding: 20,
         alignItems: 'center',
     },
-    // Estilos de la cabecera (iguales que los de Vehicles)
     headerIconContainer: {
         marginBottom: 20,
         padding: 20,
         backgroundColor: '#e6f0fa',
         borderRadius: 80,
     },
-    // Estilos para el bloque de premios (fidelización)
     loyaltyContainer: {
         width: '100%',
         alignItems: 'center',
@@ -108,9 +243,8 @@ const styles = StyleSheet.create({
     },
     progressBarFill: {
         height: '100%',
-        backgroundColor: '#4caf50', // Verde para indicar progreso
+        backgroundColor: '#4caf50',
     },
-    // Estilos del título de la sección y la tarjeta azul
     cardHeader: {
         width: '100%',
         flexDirection: 'row',
@@ -126,11 +260,10 @@ const styles = StyleSheet.create({
     },
     card: {
         width: '100%',
-        backgroundColor: '#e6f0fa', // Fondo azul clarito de la tarjeta
+        backgroundColor: '#e6f0fa',
         borderRadius: 10,
         padding: 20,
         marginBottom: 25,
-        // Borde izquierdo más grueso y oscuro, tal cual como en tus mockups
         borderLeftWidth: 6,
         borderLeftColor: '#0066cc',
         elevation: 2,
@@ -144,7 +277,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#000',
     },
-    // Botón verde
     addButton: {
         width: '80%',
         backgroundColor: '#4caf50',
@@ -157,5 +289,51 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
-    }
+    },
+    statusBadge: { backgroundColor: '#ddd', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+    statusProgress: { backgroundColor: '#ff9800' },
+    statusDone: { backgroundColor: '#4caf50' },
+    statusText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+    timerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        padding: 10,
+        borderRadius: 8,
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#ddd'
+    },
+    timeText: { fontSize: 13, fontWeight: 'bold', color: '#ff9800', marginBottom: 5 },
+    miniProgressBarBg: { width: '100%', height: 6, backgroundColor: '#eee', borderRadius: 3, overflow: 'hidden' },
+    miniProgressBarFill: { height: '100%' },
+
+    // Estilos de la calificación por estrellas
+    ratingContainer: {
+        marginTop: 15,
+        paddingTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: '#d6e8fa',
+        alignItems: 'center'
+    },
+    ratingText: { fontSize: 14, color: '#003366', fontWeight: 'bold', marginBottom: 10 },
+    starsRow: { flexDirection: 'row', justifyContent: 'center', gap: 5 },
+    commentInput: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        padding: 10,
+        minHeight: 60,
+        textAlignVertical: 'top'
+    },
+    submitRatingButton: {
+        backgroundColor: '#ff9800',
+        paddingVertical: 10,
+        borderRadius: 8,
+        marginTop: 10,
+        alignItems: 'center'
+    },
+    submitRatingText: { color: '#fff', fontWeight: 'bold' },
+    savedCommentText: { marginTop: 10, fontSize: 13, color: '#555', fontStyle: 'italic', textAlign: 'center' }
 });

@@ -24,8 +24,23 @@ export const VisitsProvider = ({ children }) => {
     const completarVisita = (id) => {
         setVisitas(visitas.map(v => v.id === id ? { ...v, estado: 'completado' } : v));
     };
+
+    // Nueva función para iniciar el temporizador
+    const iniciarVisita = (id) => {
+        setVisitas(visitas.map(v => 
+            v.id === id ? { ...v, estado: 'en_progreso', horaInicio: Date.now() } : v
+        ));
+    };
+
+    // Nueva función para calificar el servicio
+    const calificarVisita = (id, estrellas, comentario = '') => {
+        setVisitas(visitas.map(v => 
+            v.id === id ? { ...v, calificacion: estrellas, comentario } : v
+        ));
+    };
+
     return (
-        <VisitsContext.Provider value={{ visitas, addVisit, completarVisita }}>
+        <VisitsContext.Provider value={{ visitas, addVisit, completarVisita, iniciarVisita, calificarVisita }}>
             {children}
         </VisitsContext.Provider>
     );

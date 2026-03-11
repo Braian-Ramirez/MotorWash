@@ -6,7 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import { VisitsContext } from '../context/VisitsContext';
 
 export default function ActiveJobsScreen({ navigation }) {
-    const { visitas, completarVisita } = useContext(VisitsContext);
+    const { visitas, completarVisita, iniciarVisita } = useContext(VisitsContext);
     const trabajosPendientes = visitas.filter(job => job.estado !== 'completado');
 
     // Si la lista de visitas está vacía...
@@ -52,9 +52,30 @@ export default function ActiveJobsScreen({ navigation }) {
                     </Text>
 
                     {/* Botón de acción para el empleado */}
-                    <TouchableOpacity style={styles.completeButton} onPress={() => completarVisita(job.id)}>
-                        <Text style={styles.buttonText}>Marcar como listo</Text>
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                        {/* Botón Iniciar (Solo si está pendiente) */}
+                        {job.estado === 'pendiente' && (
+                            <TouchableOpacity
+                                style={[styles.completeButton, { backgroundColor: '#ff9800', flex: 1, marginRight: 5 }]}
+                                onPress={() => iniciarVisita(job.id)}
+                            >
+                                <MaterialCommunityIcons name="play-circle" size={20} color="#fff" />
+                                <Text style={styles.buttonText}>Iniciar Lavado</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {/* Botón Finalizar (Solo si ya inició) */}
+                        {job.estado === 'en_progreso' && (
+                            <TouchableOpacity
+                                style={[styles.completeButton, { flex: 1 }]}
+                                onPress={() => completarVisita(job.id)}
+                            >
+                                <MaterialCommunityIcons name="check-circle" size={20} color="#fff" />
+                                <Text style={styles.buttonText}>Marcar Listo</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
                 </View>
             ))}
         </ScrollView>

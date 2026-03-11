@@ -5,9 +5,9 @@ export const ServicesContext = createContext();
 export const ServicesProvider = ({ children }) => {
     // 💡 Estos son los servicios que el admin podrá cambiar
     const [servicios, setServicios] = useState([
-        { id: 1, titulo: 'Lavado Básico', descripcion: 'Exterior + Aspirado básico', precio: 15 },
-        { id: 2, titulo: 'Lavado Pro', descripcion: 'Exterior + Interior profundo + Cera', precio: 25 },
-        { id: 3, titulo: 'Lavado Premium', descripcion: 'Motor + Chasis + Tapicería', precio: 45 },
+        { id: 1, titulo: 'Lavado Básico', descripcion: 'Exterior + Aspirado básico', precio: 15, tiempoEstimado: 30 },
+        { id: 2, titulo: 'Lavado Pro', descripcion: 'Exterior + Interior profundo + Cera', precio: 25, tiempoEstimado: 60 },
+        { id: 3, titulo: 'Lavado Premium', descripcion: 'Motor + Chasis + Tapicería', precio: 45, tiempoEstimado: 120 },
     ]);
 
     // Función para actualizar un servicio existente

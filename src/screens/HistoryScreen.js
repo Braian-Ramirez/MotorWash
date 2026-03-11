@@ -43,6 +43,31 @@ export default function HistoryScreen() {
                     <Text style={styles.atendanteText}>
                         Encargado: <Text style={styles.boldText}>{job.encargado}</Text>
                     </Text>
+
+                    {/* ⭐ Añadir la calificación si el cliente ya puntuó */}
+                    {job.calificacion && (
+                        <View style={styles.ratingSection}>
+                            <View style={styles.starsRow}>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <MaterialCommunityIcons 
+                                        key={star}
+                                        name={job.calificacion >= star ? "star" : "star-outline"} 
+                                        size={20} 
+                                        color={job.calificacion >= star ? "#ffc107" : "#ccc"} 
+                                    />
+                                ))}
+                                <Text style={styles.ratingLabel}>{job.calificacion}/5</Text>
+                            </View>
+                            
+                            {/* 💬 Si dejó comentarios, los mostramos también */}
+                            {job.comentario ? (
+                                <View style={styles.commentBox}>
+                                    <MaterialCommunityIcons name="format-quote-open" size={16} color="#666" />
+                                    <Text style={styles.commentText}>{job.comentario}</Text>
+                                </View>
+                            ) : null}
+                        </View>
+                    )}
                 </View>
             ))}
         </ScrollView>
@@ -78,7 +103,39 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
     },
-    buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 }
+    buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+
+    ratingSection: {
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+    },
+    starsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    ratingLabel: {
+        marginLeft: 8,
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#ffc107'
+    },
+    commentBox: {
+        flexDirection: 'row',
+        backgroundColor: '#f9f9f9',
+        padding: 10,
+        borderRadius: 8,
+        marginTop: 8,
+        alignItems: 'flex-start'
+    },
+    commentText: {
+        fontSize: 13,
+        color: '#555',
+        fontStyle: 'italic',
+        marginLeft: 5,
+        flex: 1
+    }
 });
 
 

@@ -7,8 +7,18 @@ export default function StatsScreen() {
     const { visitas } = useContext(VisitsContext);
 
     // Cálculos dinámicos
-    const completados = visitas.filter(v => v.estado === 'completado').length;
-    const ingresos = completados * 20;
+    const visitasCompletadas = visitas.filter(v => v.estado === 'completado');
+    const completados = visitasCompletadas.length;
+    
+    // (Opcional recomendado: calcular ingresos sumando v.precio si existe en el contexto, 
+    // pero por ahora mantenemos la regla de $20 x lavado para no romper nada viejo).
+    const ingresos = completados * 20; 
+
+    // Cálculo de calificación promedio
+    const visitasCalificadas = visitasCompletadas.filter(v => v.calificacion);
+    const promedio = visitasCalificadas.length > 0
+        ? (visitasCalificadas.reduce((sum, v) => sum + v.calificacion, 0) / visitasCalificadas.length).toFixed(1)
+        : "0.0";
 
     return (
         <ScrollView style={styles.container}>
@@ -24,11 +34,18 @@ export default function StatsScreen() {
                     <Text style={styles.statLabel}>Ganancias Hoy</Text>
                 </View>
 
-                {/* Tarjeta de Lavados (CORREGIDA) */}
+                {/* Tarjeta de Lavados */}
                 <View style={[styles.card, { borderLeftColor: '#1a237e' }]}>
                     <MaterialCommunityIcons name="car-wash" size={30} color="#1a237e" />
                     <Text style={styles.statNumber}>{completados}</Text>
-                    <Text style={styles.statLabel}>Vehículos Lavados</Text>
+                    <Text style={styles.statLabel}>Lavados Hoy</Text>
+                </View>
+
+                {/* Tarjeta de Calificación Promedio */}
+                <View style={[styles.card, { borderLeftColor: '#ffc107' }]}>
+                    <MaterialCommunityIcons name="star-circle" size={30} color="#ffc107" />
+                    <Text style={styles.statNumber}>{promedio}</Text>
+                    <Text style={styles.statLabel}>Puntuación</Text>
                 </View>
             </View>
 
@@ -44,7 +61,17 @@ export default function StatsScreen() {
                             <MaterialCommunityIcons name="check-circle" size={24} color="#4caf50" />
                             <View style={styles.itemInfo}>
                                 <Text style={styles.recentVehicle}>{visit.vehiculo}</Text>
-                                <Text style={styles.recentService}>{visit.tipoLavado}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                    <Text style={styles.recentService}>{visit.tipoLavado}</Text>
+                                    {visit.calificacion && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
+                                            <MaterialCommunityIcons name="star" size={14} color="#ffc107" />
+                                            <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#ffc107', marginLeft: 2 }}>
+                                                {visit.calificacion}/5
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
                             </View>
                         </View>
                     ))
@@ -61,14 +88,15 @@ const styles = StyleSheet.create({
     statsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 25 },
     card: {
         backgroundColor: '#fff',
-        width: '48%',
-        padding: 15,
+        width: '31%', // Cambiado a 31% para que quepan 3 tarjetas (Dólares, Lavados, Estrellas)
+        padding: 10,
         borderRadius: 12,
         borderLeftWidth: 5,
         elevation: 4,
+        alignItems: 'center' // Centramos la tarjeta para que quede más simétrica
     },
-    statNumber: { fontSize: 22, fontWeight: 'bold', color: '#333', marginVertical: 5 },
-    statLabel: { fontSize: 13, color: '#666' },
+    statNumber: { fontSize: 20, fontWeight: 'bold', color: '#333', marginVertical: 5 },
+    statLabel: { fontSize: 11, color: '#666', textAlign: 'center' },
 
 
     subtitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 15 },

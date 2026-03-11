@@ -11,15 +11,21 @@ export default function EditServiceScreen({ route, navigation }) {
     const [titulo, setTitulo] = useState(servicioAEditar ? servicioAEditar.titulo : '');
     const [descripcion, setDescripcion] = useState(servicioAEditar ? servicioAEditar.descripcion : '');
     const [precio, setPrecio] = useState(servicioAEditar ? servicioAEditar.precio.toString() : '');
+    const [tiempoEstimado, setTiempoEstimado] = useState(servicioAEditar && servicioAEditar.tiempoEstimado ? servicioAEditar.tiempoEstimado.toString() : '');
 
     const handleSave = () => {
         // TAREA: Valida que los campos no estén vacíos
-        if (!titulo || !descripcion || !precio) {
-            Alert.alert("Error", "Todos los campos son obligatorios.");
+        if (!titulo || !descripcion || !precio || !tiempoEstimado) {
+            Alert.alert("Error", "Todos los campos (incluyendo el tiempo estimado) son obligatorios.");
             return;
         }
 
-        const datos = { titulo, descripcion, precio: parseFloat(precio) };
+        const datos = { 
+            titulo, 
+            descripcion, 
+            precio: parseFloat(precio),
+            tiempoEstimado: parseInt(tiempoEstimado, 10)
+        };
 
         if (servicioAEditar) {
             actualizarServicio(servicioAEditar.id, datos);
@@ -41,8 +47,11 @@ export default function EditServiceScreen({ route, navigation }) {
             <Text style={styles.label}>Descripción:</Text>
             <TextInput style={styles.input} value={descripcion} onChangeText={setDescripcion} placeholder="Descripción del servicio" />
 
-            <Text style={styles.label}>Precio:</Text>
-            <TextInput style={styles.input} value={precio} onChangeText={setPrecio} keyboardType="numeric" placeholder="Precio" />
+            <Text style={styles.label}>Precio ($):</Text>
+            <TextInput style={styles.input} value={precio} onChangeText={setPrecio} keyboardType="numeric" placeholder="Ej: 15" />
+
+            <Text style={styles.label}>Tiempo Estimado (Minutos):</Text>
+            <TextInput style={styles.input} value={tiempoEstimado} onChangeText={setTiempoEstimado} keyboardType="numeric" placeholder="Ej: 45" />
 
             <TouchableOpacity style={styles.button} onPress={handleSave}>
                 <Text style={styles.buttonText}>Guardar Cambios</Text>

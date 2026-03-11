@@ -23,6 +23,12 @@ export default function ManageServicesScreen({ navigation }) {
                             <Text style={styles.serviceTitle}>{s.titulo}</Text>
                             <Text style={styles.serviceDesc}>{s.descripcion}</Text>
                             <Text style={styles.servicePrice}>Precio: ${s.precio}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 3 }}>
+                                <MaterialCommunityIcons name="clock-outline" size={14} color="#666" />
+                                <Text style={{ fontSize: 13, color: '#666', marginLeft: 4 }}>
+                                    {s.tiempoEstimado ? `${s.tiempoEstimado} min` : 'No definido'}
+                                </Text>
+                            </View>
                         </View>
                     </View>
 

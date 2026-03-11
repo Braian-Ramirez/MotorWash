@@ -42,9 +42,12 @@ export default function NewVisitScreen({ navigation }) {
     };
 
     const handleSave = () => {
+        const servicioElegido = servicios.find(s => s.titulo === tipoLavado);
+        
         const nuevaCita = {
             fecha: Platform.OS === 'web' ? fechaWeb : date.toLocaleDateString(),
             tipoLavado,
+            tiempoEstimado: servicioElegido ? servicioElegido.tiempoEstimado : 30, // 30 por defecto
             encargado,
             vehiculo
         };
