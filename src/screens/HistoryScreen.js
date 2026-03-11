@@ -9,6 +9,13 @@ export default function HistoryScreen() {
     const { visitas, completarVisita } = useContext(VisitsContext);
     const trabajosCompletados = visitas.filter(job => job.estado === 'completado');
 
+    const getIconForType = (tipo) => {
+        const t = String(tipo || '').trim().toLowerCase();
+        if (t.includes('moto')) return 'motorbike';
+        if (t.includes('camioneta') || t.includes('pickup') || t.includes('suv')) return 'truck';
+        return 'car-side';
+    };
+
     // Si la lista de visitas está vacía...
     if (trabajosCompletados.length === 0) {
         return (
@@ -31,7 +38,10 @@ export default function HistoryScreen() {
             {trabajosCompletados.map((job) => (
                 <View key={job.id} style={styles.jobCard}>
                     <View style={styles.cardHeader}>
-                        <Text style={styles.vehicleText}>{job.vehiculo}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                            <MaterialCommunityIcons name={getIconForType(job.vehiculo)} size={22} color="#3b5998" style={{ marginRight: 5 }} />
+                            <Text style={styles.vehicleText} numberOfLines={1}>{job.vehiculo}</Text>
+                        </View>
                         <MaterialCommunityIcons name="clock-outline" size={20} color="#666" />
                         <Text style={styles.timeText}>{job.fecha}</Text>
                     </View>
@@ -49,16 +59,16 @@ export default function HistoryScreen() {
                         <View style={styles.ratingSection}>
                             <View style={styles.starsRow}>
                                 {[1, 2, 3, 4, 5].map((star) => (
-                                    <MaterialCommunityIcons 
+                                    <MaterialCommunityIcons
                                         key={star}
-                                        name={job.calificacion >= star ? "star" : "star-outline"} 
-                                        size={20} 
-                                        color={job.calificacion >= star ? "#ffc107" : "#ccc"} 
+                                        name={job.calificacion >= star ? "star" : "star-outline"}
+                                        size={20}
+                                        color={job.calificacion >= star ? "#ffc107" : "#ccc"}
                                     />
                                 ))}
                                 <Text style={styles.ratingLabel}>{job.calificacion}/5</Text>
                             </View>
-                            
+
                             {/* 💬 Si dejó comentarios, los mostramos también */}
                             {job.comentario ? (
                                 <View style={styles.commentBox}>

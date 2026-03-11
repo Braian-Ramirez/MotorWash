@@ -25,7 +25,7 @@ export default function NewVisitScreen({ navigation }) {
     useEffect(() => {
         if (vehiculos && vehiculos.length > 0 && vehiculo === '') {
             const v = vehiculos[0];
-            setVehiculo(`${v.marca} ${v.color} (${v.placa})`);
+            setVehiculo(`${v.tipo} - ${v.marca} ${v.color} (${v.placa})`);
         }
     }, [vehiculos]);
 
@@ -91,7 +91,7 @@ export default function NewVisitScreen({ navigation }) {
                 <View style={styles.pickerContainer}>
                     <Picker selectedValue={vehiculo} onValueChange={setVehiculo}>
                         {vehiculos.map((v) => (
-                            <Picker.Item key={v.id} label={`${v.marca} ${v.color} (${v.placa})`} value={`${v.marca} ${v.color} (${v.placa})`} />
+                            <Picker.Item key={v.id} label={`${v.tipo} - ${v.marca} ${v.color} (${v.placa})`} value={`${v.tipo} - ${v.marca} ${v.color} (${v.placa})`} />
                         ))}
                     </Picker>
                 </View>

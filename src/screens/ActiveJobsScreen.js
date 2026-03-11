@@ -9,6 +9,13 @@ export default function ActiveJobsScreen({ navigation }) {
     const { visitas, completarVisita, iniciarVisita } = useContext(VisitsContext);
     const trabajosPendientes = visitas.filter(job => job.estado !== 'completado');
 
+    const getIconForType = (tipo) => {
+        const t = String(tipo || '').trim().toLowerCase();
+        if (t.includes('moto')) return 'motorbike';
+        if (t.includes('camioneta') || t.includes('pickup') || t.includes('suv')) return 'truck';
+        return 'car-side';
+    };
+
     // Si la lista de visitas está vacía...
     if (visitas.length === 0) {
         return (
@@ -38,7 +45,10 @@ export default function ActiveJobsScreen({ navigation }) {
             {trabajosPendientes.map((job) => (
                 <View key={job.id} style={styles.jobCard}>
                     <View style={styles.cardHeader}>
-                        <Text style={styles.vehicleText}>{job.vehiculo}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                            <MaterialCommunityIcons name={getIconForType(job.vehiculo)} size={22} color="#3b5998" style={{ marginRight: 5 }} />
+                            <Text style={styles.vehicleText} numberOfLines={1}>{job.vehiculo}</Text>
+                        </View>
                         <MaterialCommunityIcons name="clock-outline" size={20} color="#666" />
                         <Text style={styles.timeText}>{job.fecha}</Text>
                     </View>

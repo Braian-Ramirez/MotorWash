@@ -20,6 +20,13 @@ export default function VehiclesScreen({ navigation }) {
         navigation.navigate('AddVehicle');
     };
 
+    const getIconForType = (tipo) => {
+        const t = String(tipo || '').trim().toLowerCase();
+        if (t.includes('moto')) return 'motorbike';
+        if (t.includes('camioneta') || t.includes('pickup') || t.includes('suv')) return 'truck';
+        return 'car-side';
+    };
+
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
 
@@ -35,7 +42,7 @@ export default function VehiclesScreen({ navigation }) {
 
                     <View style={styles.cardHeader}>
                         <Text style={styles.cardTitle}>Vehículo #{index + 1}</Text>
-                        <MaterialCommunityIcons name="car-side" size={24} color="#0066cc" />
+                        <MaterialCommunityIcons name={getIconForType(vehiculo.tipo)} size={24} color="#0066cc" />
                     </View>
 
                     <Text style={styles.cardText}>Tipo: <Text style={styles.cardData}>{vehiculo.tipo}</Text></Text>

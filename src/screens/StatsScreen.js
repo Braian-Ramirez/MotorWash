@@ -9,16 +9,23 @@ export default function StatsScreen() {
     // Cálculos dinámicos
     const visitasCompletadas = visitas.filter(v => v.estado === 'completado');
     const completados = visitasCompletadas.length;
-    
+
     // (Opcional recomendado: calcular ingresos sumando v.precio si existe en el contexto, 
     // pero por ahora mantenemos la regla de $20 x lavado para no romper nada viejo).
-    const ingresos = completados * 20; 
+    const ingresos = completados * 20;
 
     // Cálculo de calificación promedio
     const visitasCalificadas = visitasCompletadas.filter(v => v.calificacion);
     const promedio = visitasCalificadas.length > 0
         ? (visitasCalificadas.reduce((sum, v) => sum + v.calificacion, 0) / visitasCalificadas.length).toFixed(1)
         : "0.0";
+
+    const getIconForType = (tipo) => {
+        const t = String(tipo || '').trim().toLowerCase();
+        if (t.includes('moto')) return 'motorbike';
+        if (t.includes('camioneta') || t.includes('pickup') || t.includes('suv')) return 'truck';
+        return 'car-side';
+    };
 
     return (
         <ScrollView style={styles.container}>
@@ -58,7 +65,7 @@ export default function StatsScreen() {
                 ) : (
                     visitas.filter(v => v.estado === 'completado').reverse().slice(0, 5).map(visit => (
                         <View key={visit.id} style={styles.recentItem}>
-                            <MaterialCommunityIcons name="check-circle" size={24} color="#4caf50" />
+                            <MaterialCommunityIcons name={getIconForType(visit.vehiculo)} size={24} color="#1a237e" />
                             <View style={styles.itemInfo}>
                                 <Text style={styles.recentVehicle}>{visit.vehiculo}</Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
