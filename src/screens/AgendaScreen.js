@@ -5,12 +5,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { VisitsContext } from '../context/VisitsContext';
 
 export default function AgendaScreen({ navigation }) {
-    // Simulamos que el usuario ha lavado su carro 3 veces
-    const [lavadasAcumuladas, setLavadasAcumuladas] = useState(3);
-    const lavadasParaPremio = 5; // El total necesario para el premio
-
     // Extraemos la lista real de visitas y la función de calificación
     const { visitas, calificarVisita } = useContext(VisitsContext);
+
+    // Calculamos las lavadas acumuladas reales (solo las completadas)
+    const lavadasAcumuladas = visitas.filter(v => v.estado === 'completado').length;
+    const lavadasParaPremio = 5; // El total necesario para el premio
 
     // Estado local para recordar lo que el cliente selecciona antes de darle "Enviar"
     const [calificacionesTemp, setCalificacionesTemp] = useState({});

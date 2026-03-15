@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
             return { success: true };
         } catch (error) {
-            return { success: false, error: error.message };
+            return { success: false, error: error.message, code: error.code };
         }
     };
 
@@ -36,6 +36,22 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.message, code: error.code };
+        }
+    };
+
+    // -- Nueva función: ACTUALIZAR PERFIL --
+    const updateProfile = async (datosNuevos) => {
+        if (!user) return { success: false, error: "No hay usuario logueado" };
+        try {
+            const docRef = doc(db, "usuarios", user.uid);
+            await setDoc(docRef, datosNuevos, { merge: true });
+            // El useEffect (vigilante) se encargará de actualizar el estado 'user' automáticamente 
+            // si estuviéramos usando onSnapshot, pero como usamos getDoc, 
+            // vamos a actualizar el estado localmente para feedback inmediato:
+            setUser({ ...user, ...datosNuevos });
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
@@ -61,17 +77,21 @@ export const AuthProvider = ({ children }) => {
                 const docRef = doc(db, "usuarios", currentUser.uid);
                 const docSnap = await getDoc(docRef);
 
-                let role = 'client'; // Por defecto
-
                 if (docSnap.exists()) {
-                    role = docSnap.data().rol;
+                    const data = docSnap.data();
+                    setUser({
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        ...data, // Esto trae nombre, telefono, rol, etc.
+                        role: data.rol // Mapeamos rol a role por consistencia
+                    });
+                } else {
+                    setUser({
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        role: 'client'
+                    });
                 }
-
-                setUser({
-                    uid: currentUser.uid,
-                    email: currentUser.email,
-                    role: role
-                });
             } else {
                 setUser(null);
             }
@@ -80,7 +100,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, register }}>
+        <AuthContext.Provider value={{ user, login, logout, register, updateProfile }}>
             {children}
         </AuthContext.Provider>
     );

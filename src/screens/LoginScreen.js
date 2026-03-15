@@ -1,11 +1,13 @@
 import React, { useState, useContext } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
     const { login, user } = useContext(AuthContext);
 
     // Efecto para navegar automáticamente cuando el usuario esté cargado
@@ -32,7 +34,11 @@ export default function LoginScreen({ navigation }) {
         setLoading(false);
 
         if (!result.success) {
-            Alert.alert("Error de Inicio de Sesión", result.error);
+            if (result.code === 'auth/user-not-found' || result.code === 'auth/invalid-credential') {
+                setShowModal(true);
+            } else {
+                Alert.alert("Error de Inicio de Sesión", result.error);
+            }
         }
         // La navegación ahora la maneja el useEffect arriba para ser más seguro
     };
@@ -76,6 +82,43 @@ export default function LoginScreen({ navigation }) {
             <TouchableOpacity style={styles.buttonSecondary} onPress={handleRegister}>
                 <Text style={styles.buttonTextSecondary}>Registrarse</Text>
             </TouchableOpacity>
+
+            {/* Modal de Usuario No Registrado */}
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={showModal}
+                onRequestClose={() => setShowModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalIconContainer}>
+                            <MaterialCommunityIcons name="account-search-outline" size={60} color="#003366" />
+                        </View>
+                        <Text style={styles.modalTitle}>¡Ups! No te encontramos</Text>
+                        <Text style={styles.modalText}>
+                            Parece que no tienes una cuenta con nosotros. ¿Te gustaría registrarte para empezar a lavar tu motor?
+                        </Text>
+                        
+                        <TouchableOpacity 
+                            style={styles.modalButtonPrimary} 
+                            onPress={() => {
+                                setShowModal(false);
+                                navigation.navigate('Register');
+                            }}
+                        >
+                            <Text style={styles.modalButtonText}>Registrarme ahora</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.modalButtonSecondary} 
+                            onPress={() => setShowModal(false)}
+                        >
+                            <Text style={styles.modalButtonTextSecondary}>Intentar de nuevo</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -130,5 +173,73 @@ const styles = StyleSheet.create({
         color: '#3b5998',
         fontSize: 16,
         fontWeight: 'bold',
-    }
+    },
+    // Estilos del Modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '85%',
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 25,
+        alignItems: 'center',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+    },
+    modalIconContainer: {
+        backgroundColor: '#f0f4f8',
+        padding: 20,
+        borderRadius: 50,
+        marginBottom: 20,
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#003366',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    modalText: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 25,
+        lineHeight: 22,
+    },
+    modalButtonPrimary: {
+        width: '100%',
+        height: 50,
+        backgroundColor: '#003366',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    modalButtonSecondary: {
+        width: '100%',
+        height: 50,
+        backgroundColor: 'transparent',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    modalButtonTextSecondary: {
+        color: '#666',
+        fontSize: 16,
+        fontWeight: '600',
+    },
 });

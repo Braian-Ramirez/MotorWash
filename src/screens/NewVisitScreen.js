@@ -5,12 +5,17 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { VisitsContext } from '../context/VisitsContext';
 import { VehiclesContext } from '../context/VehiclesContext';
 import { ServicesContext } from '../context/ServicesContext';
+import { UsersContext } from '../context/UserContext';
 
 export default function NewVisitScreen({ navigation }) {
 
     const { addVisit } = useContext(VisitsContext);
     const { vehiculos } = useContext(VehiclesContext);
     const { servicios } = useContext(ServicesContext);
+    const { usuarios } = useContext(UsersContext);
+
+    // Filtramos los usuarios para obtener solo los empleados
+    const empleados = usuarios.filter(u => u.rol === 'employee');
 
     // 1. ESTADOS (Aquí es donde estaba el problema, ya restaurados)
     const [vehiculo, setVehiculo] = useState('');
@@ -81,9 +86,10 @@ export default function NewVisitScreen({ navigation }) {
                 <Text style={styles.label}>Encargado:</Text>
                 <View style={styles.pickerContainer}>
                     <Picker selectedValue={encargado} onValueChange={setEncargado}>
-                        <Picker.Item label="Cualquiera" value="Cualquiera" />
-                        <Picker.Item label="Carlos Ruiz" value="Carlos Ruiz" />
-                        <Picker.Item label="Ana Gómez" value="Ana Gómez" />
+                        <Picker.Item label="Cualquiera (Asignación automática)" value="Cualquiera" />
+                        {empleados.map((emp) => (
+                            <Picker.Item key={emp.id} label={emp.nombre} value={emp.nombre} />
+                        ))}
                     </Picker>
                 </View>
 

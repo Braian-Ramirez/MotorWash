@@ -5,30 +5,46 @@ import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 
 export default function ProfileScreen({ navigation }) {
-    const { logout } = useContext(AuthContext);
-    // Simulamos los datos actuales del usuario logueado
-    const [nombre, setNombre] = useState('Juan Pérez');
-    const [telefono, setTelefono] = useState('555-1234'); // Agregamos el teléfono
-    const [correo, setCorreo] = useState('juan.perez@email.com');
-    const [password, setPassword] = useState('123456');
+    const { logout, user, updateProfile } = useContext(AuthContext);
+    
+    // Inicializamos los estados con los datos reales del usuario
+    const [nombre, setNombre] = useState(user?.nombre || '');
+    const [telefono, setTelefono] = useState(user?.telefono || '');
+    const [correo, setCorreo] = useState(user?.email || '');
+    const [password, setPassword] = useState('******'); // La contraseña no se descarga por seguridad
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [image, setImage] = useState(null); // Estado para la foto de perfil
+    const [image, setImage] = useState(null); 
+
+    // Efecto para actualizar los campos si el usuario cambia (ej: al cargar el perfil tras el login)
+    React.useEffect(() => {
+        if (user) {
+            setNombre(user.nombre || '');
+            setTelefono(user.telefono || '');
+            setCorreo(user.email || '');
+        }
+    }, [user]);
 
     // Modo edición: Si es false, los campos son de solo lectura. Si es true, se pueden modificar.
     const [isEditing, setIsEditing] = useState(false);
 
-    const handleSave = () => {
-        // Validación: Si estamos editando la contraseña, deben coincidir
-        if (password !== confirmPassword && confirmPassword !== '') {
-            Alert.alert("Error", "Las contraseñas no coinciden. Por favor verifica.");
-            return; // Detenemos el guardado si no coinciden
+    const handleSave = async () => {
+        // Validación básica
+        if (!nombre || !telefono) {
+            Alert.alert("Error", "El nombre y el teléfono son obligatorios.");
+            return;
         }
 
-        console.log("Guardando nuevos datos del perfil:", nombre, telefono, correo);
-        setIsEditing(false); // Apagamos el modo edición al guardar
-        setConfirmPassword(''); // Limpiamos el campo de confirmar contraseña por seguridad
-        // Usamos Alert en lugar de alert para que se vea nativo en el celular
-        Alert.alert('Éxito', 'Perfil actualizado con éxito');
+        const result = await updateProfile({
+            nombre: nombre,
+            telefono: telefono
+        });
+
+        if (result.success) {
+            setIsEditing(false);
+            Alert.alert('Éxito', 'Perfil actualizado en la base de datos');
+        } else {
+            Alert.alert('Error', 'No se pudo actualizar: ' + result.error);
+        }
     };
 
     const pickImage = async () => {
