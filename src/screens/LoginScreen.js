@@ -5,27 +5,36 @@ import { AuthContext } from '../context/AuthContext';
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login } = useContext(AuthContext);
+    const [loading, setLoading] = useState(false);
+    const { login, user } = useContext(AuthContext);
 
-    const handleLogin = () => {
+    // Efecto para navegar automáticamente cuando el usuario esté cargado
+    React.useEffect(() => {
+        if (user) {
+            if (user.role === 'admin') {
+                navigation.navigate('AdminHome');
+            } else if (user.role === 'employee') {
+                navigation.navigate('EmployeeHome');
+            } else {
+                navigation.navigate('Home');
+            }
+        }
+    }, [user]);
+
+    const handleLogin = async () => {
         if (!email || !password) {
             Alert.alert("Error", "Por favor ingresa correo y contraseña.");
             return;
         }
 
-        // Llamamos a la función de login del contexto
-        const role = login(email);
+        setLoading(true);
+        const result = await login(email, password);
+        setLoading(false);
 
-        console.log("Sesión iniciada como:", role);
-
-        // Navegamos según el rol detectado
-        if (role === 'admin') {
-            navigation.navigate('AdminHome');
-        } else if (role === 'employee') {
-            navigation.navigate('EmployeeHome');
-        } else {
-            navigation.navigate('Home');
+        if (!result.success) {
+            Alert.alert("Error de Inicio de Sesión", result.error);
         }
+        // La navegación ahora la maneja el useEffect arriba para ser más seguro
     };
 
     const handleRegister = () => {
@@ -54,8 +63,14 @@ export default function LoginScreen({ navigation }) {
                 secureTextEntry={true}
             />
 
-            <TouchableOpacity style={styles.buttonPrimary} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Iniciar Sesión</Text>
+            <TouchableOpacity 
+                style={[styles.buttonPrimary, loading && { opacity: 0.7 }]} 
+                onPress={handleLogin}
+                disabled={loading}
+            >
+                <Text style={styles.buttonText}>
+                    {loading ? 'Cargando...' : 'Iniciar Sesión'}
+                </Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.buttonSecondary} onPress={handleRegister}>

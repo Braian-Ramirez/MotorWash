@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { AuthContext } from '../context/AuthContext';
 
 export default function ProfileScreen({ navigation }) {
+    const { logout } = useContext(AuthContext);
     // Simulamos los datos actuales del usuario logueado
     const [nombre, setNombre] = useState('Juan Pérez');
     const [telefono, setTelefono] = useState('555-1234'); // Agregamos el teléfono
@@ -49,8 +51,9 @@ export default function ProfileScreen({ navigation }) {
         setConfirmPassword(''); // Limpiamos el campo si cancela
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         console.log("Cerrando sesión...");
+        await logout();
         navigation.reset({
             index: 0,
             routes: [{ name: 'Login' }],

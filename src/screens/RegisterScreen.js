@@ -1,21 +1,34 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { AuthContext } from '../context/AuthContext';
 
 export default function RegisterScreen({ navigation }) {
-    // En tu diseño, el registro pide Nombre, Correo, Contraseña y Confirmar Contraseña
+    const { register } = useContext(AuthContext);
     const [nombre, setNombre] = useState('');
     const [telefono, setTelefono] = useState('');
     const [correo, setCorreo] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    const handleRegister = () => {
-        // Aquí en el futuro enviarías los datos a la base de datos
-        console.log("Registrando a:", nombre, correo);
+    const handleRegister = async () => {
+        // Validaciones básicas
+        if (!correo || !password || !nombre) {
+            Alert.alert("Error", 'Por favor llena los campos obligatorios');
+            return;
+        }
+        if (password !== confirmPassword) {
+            Alert.alert("Error", 'Las contraseñas no coinciden');
+            return;
+        }
+        // Llamamos a la función del contexto
+        const result = await register(correo, password, nombre, telefono);
 
-        // Por ahora, simularemos que al registrarse se devuelve a la pantalla de Login
-        alert('¡Usuario creado con éxito!');
-        navigation.navigate('Login');
+        if (result.success) {
+            Alert.alert("Éxito", '¡Usuario creado con éxito!');
+            navigation.navigate('Login');
+        } else {
+            Alert.alert("Error de Registro", result.error);
+        }
     };
 
     const handleBackToLogin = () => {

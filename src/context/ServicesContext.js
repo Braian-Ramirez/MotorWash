@@ -1,25 +1,43 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
+import { db } from '../config/firebase';
+import { collection, onSnapshot, addDoc, updateDoc, doc } from 'firebase/firestore';
 
 export const ServicesContext = createContext();
 
 export const ServicesProvider = ({ children }) => {
     // 💡 Estos son los servicios que el admin podrá cambiar
-    const [servicios, setServicios] = useState([
-        { id: 1, titulo: 'Lavado Básico', descripcion: 'Exterior + Aspirado básico', precio: 15, tiempoEstimado: 30 },
-        { id: 2, titulo: 'Lavado Pro', descripcion: 'Exterior + Interior profundo + Cera', precio: 25, tiempoEstimado: 60 },
-        { id: 3, titulo: 'Lavado Premium', descripcion: 'Motor + Chasis + Tapicería', precio: 45, tiempoEstimado: 120 },
-    ]);
+    const [servicios, setServicios] = useState([]);
+
+    // 🔄 Sincronizar con Firebase en tiempo real
+    useEffect(() => {
+        const q = collection(db, "servicios");
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const lista = [];
+            querySnapshot.forEach((doc) => {
+                lista.push({ ...doc.data(), id: doc.id });
+            });
+            setServicios(lista);
+        });
+        return () => unsubscribe();
+    }, []);
 
     // Función para actualizar un servicio existente
-    const actualizarServicio = (id, nuevosDatos) => {
-        setServicios(servicios.map(s =>
-            s.id === id ? { ...s, ...nuevosDatos } : s
-        ));
+    const actualizarServicio = async (id, nuevosDatos) => {
+        try {
+            const docRef = doc(db, "servicios", id);
+            await updateDoc(docRef, nuevosDatos);
+        } catch (error) {
+            console.error("Error al actualizar servicio:", error);
+        }
     };
 
     // Función para agregar uno nuevo
-    const agregarServicio = (nuevoServicio) => {
-        setServicios([...servicios, { ...nuevoServicio, id: Date.now() }]);
+    const agregarServicio = async (nuevoServicio) => {
+        try {
+            await addDoc(collection(db, "servicios"), nuevoServicio);
+        } catch (error) {
+            console.error("Error al agregar servicio:", error);
+        }
     };
 
     return (

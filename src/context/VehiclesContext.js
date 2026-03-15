@@ -1,4 +1,7 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { db } from '../config/firebase';
+import { collection, onSnapshot, query, where, addDoc, updateDoc, doc } from 'firebase/firestore';
+import { AuthContext } from './AuthContext';
 
 // 1. CREAMOS LA "NUBE" (El Contexto)
 // Esto es lo que las pantallas van a importar para conectarse
@@ -8,28 +11,50 @@ export const VehiclesContext = createContext();
 // Este componente guardará los datos reales y se los regalará a los "children" (pantallas)
 export const VehiclesProvider = ({ children }) => {
 
-    // Aquí mudamos la lista de vehículos que tenías en VehiclesScreen
-    // ¡Ahora vive en la nube global!
-    const [vehiculos, setVehiculos] = useState([
-        { id: 1, tipo: 'Carro', color: 'Rojo', marca: 'Toyota', placa: 'ABC-123' },
-        { id: 2, tipo: 'Camioneta', color: 'Gris', marca: 'Ford', placa: 'XYZ-987' },
-    ]);
+    const [vehiculos, setVehiculos] = useState([]);
+    const { user } = useContext(AuthContext);
+
+    // 🔄 Sincronizar con Firebase (Solo los carros del usuario actual)
+    useEffect(() => {
+        if (!user) {
+            setVehiculos([]);
+            return;
+        }
+
+        const q = query(collection(db, "vehiculos"), where("userId", "==", user.uid));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const lista = [];
+            querySnapshot.forEach((doc) => {
+                lista.push({ ...doc.data(), id: doc.id });
+            });
+            setVehiculos(lista);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     // Función global para AGREGAR un vehículo
-    const addVehicle = (nuevoVehiculo) => {
-        // Le asignamos un ID falso por ahora basado en el tiempo
-        nuevoVehiculo.id = Date.now();
-        // Agregamos el nuevo al final de la lista existente
-        setVehiculos([...vehiculos, nuevoVehiculo]);
+    const addVehicle = async (nuevoVehiculo) => {
+        if (!user) return;
+        try {
+            await addDoc(collection(db, "vehiculos"), {
+                ...nuevoVehiculo,
+                userId: user.uid
+            });
+        } catch (error) {
+            console.error("Error al añadir vehículo:", error);
+        }
     };
 
     // Función global para EDITAR un vehículo
-    const updateVehicle = (vehiculoEditado) => {
-        // Buscamos cuál es el carro viejo, y lo reemplazamos por el editado
-        const listaActualizada = vehiculos.map(vehiculoViejo =>
-            vehiculoViejo.id === vehiculoEditado.id ? vehiculoEditado : vehiculoViejo
-        );
-        setVehiculos(listaActualizada);
+    const updateVehicle = async (vehiculoEditado) => {
+        try {
+            const { id, ...datos } = vehiculoEditado;
+            const docRef = doc(db, "vehiculos", id);
+            await updateDoc(docRef, datos);
+        } catch (error) {
+            console.error("Error al actualizar vehículo:", error);
+        }
     };
 
     return (
