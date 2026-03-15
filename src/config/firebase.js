@@ -2,14 +2,14 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// Configuración de tu proyecto en Firebase
+// Configuración de tu proyecto en Firebase usando variables de entorno
 const firebaseConfig = {
-  apiKey: "AIzaSyAb8LttH18xZg4YR7ReRJ09NMPKV1EVa2g",
-  authDomain: "motorwashapp-374fc.firebaseapp.com",
-  projectId: "motorwashapp-374fc",
-  storageBucket: "motorwashapp-374fc.firebasestorage.app",
-  messagingSenderId: "727814723332",
-  appId: "1:727814723332:web:afe7dbb18b67999c912251"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
 };
 
 // Inicializamos Firebase
