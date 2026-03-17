@@ -1,18 +1,44 @@
 import React, { useContext } from 'react';
 // ScrollView permite que la pantalla se pueda deslizar si hay muchas tarjetas
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { VehiclesContext } from '../context/VehiclesContext';
 
 export default function VehiclesScreen({ navigation }) {
 
     // Extraemos la lista de vehículos de la nube
-    const { vehiculos } = useContext(VehiclesContext);
+    const { vehiculos, removeVehicle } = useContext(VehiclesContext);
 
     // Funciones vacías para cuando toquemos los botones
     const handleEdit = (vehiculo) => {
         // En vez de solo hacer print, navegamos a AddVehicle y le enviamos el objeto entero
         navigation.navigate('AddVehicle', { vehiculoAEditar: vehiculo });
+    };
+
+    const handleDelete = (id) => {
+        console.log("Intentando eliminar vehículo con ID:", id);
+        
+        if (Platform.OS === 'web') {
+            // En web, Alert.alert a veces no se muestra, mejor usar el nativo del navegador
+            const confirmar = window.confirm("¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer.");
+            if (confirmar) {
+                removeVehicle(id);
+            }
+        } else {
+            // En móvil usamos la alerta estética de React Native
+            Alert.alert(
+                "Eliminar Vehículo",
+                "¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer.",
+                [
+                    { text: "Cancelar", style: "cancel" },
+                    { 
+                        text: "Eliminar", 
+                        style: "destructive", 
+                        onPress: () => removeVehicle(id) 
+                    }
+                ]
+            );
+        }
     };
 
     const handleAddVehicle = () => {
@@ -50,10 +76,24 @@ export default function VehiclesScreen({ navigation }) {
                     <Text style={styles.cardText}>Marca: <Text style={styles.cardData}>{vehiculo.marca}</Text></Text>
                     <Text style={styles.cardText}>Placa: <Text style={styles.cardData}>{vehiculo.placa}</Text></Text>
 
-                    {/* Botón Editar que está dentro de cada tarjeta */}
-                    <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(vehiculo)}>
-                        <Text style={styles.editButtonText}>Editar</Text>
-                    </TouchableOpacity>
+                    {/* Fila de botones de acción */}
+                    <View style={styles.cardActions}>
+                        <TouchableOpacity 
+                            style={styles.deleteButton} 
+                            onPress={() => handleDelete(vehiculo.id)}
+                        >
+                            <MaterialCommunityIcons name="trash-can-outline" size={20} color="#f44336" />
+                            <Text style={styles.deleteButtonText}>Eliminar</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.editButton} 
+                            onPress={() => handleEdit(vehiculo)}
+                        >
+                            <MaterialCommunityIcons name="pencil-outline" size={20} color="#0066cc" />
+                            <Text style={styles.editButtonText}>Editar</Text>
+                        </TouchableOpacity>
+                    </View>
 
                 </View>
             ))}
@@ -120,17 +160,40 @@ const styles = StyleSheet.create({
         fontWeight: 'bold', // Hace que "Rojo" o "Toyota" resalte
         color: '#000',
     },
+    cardActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+        paddingTop: 10,
+        gap: 15,
+    },
     editButton: {
-        alignSelf: 'flex-end', // Empuja el botón a la derecha
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingVertical: 6,
-        paddingHorizontal: 15,
-        backgroundColor: '#f0f0f0', // Gris claro
-        borderRadius: 5,
-        marginTop: 5,
+        paddingHorizontal: 12,
+        backgroundColor: '#e6f0fa',
+        borderRadius: 8,
     },
     editButtonText: {
         color: '#0066cc',
         fontWeight: 'bold',
+        marginLeft: 5,
+    },
+    deleteButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        backgroundColor: '#ffebeb',
+        borderRadius: 8,
+    },
+    deleteButtonText: {
+        color: '#f44336',
+        fontWeight: 'bold',
+        marginLeft: 5,
     },
     addButton: {
         width: '80%',

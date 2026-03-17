@@ -2,17 +2,27 @@ import React, { useContext } from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { VisitsContext } from '../context/VisitsContext';
+import { ServicesContext } from '../context/ServicesContext';
 
 export default function StatsScreen() {
     const { visitas } = useContext(VisitsContext);
+    const { servicios } = useContext(ServicesContext);
 
     // Cálculos dinámicos
     const visitasCompletadas = visitas.filter(v => v.estado === 'completado');
     const completados = visitasCompletadas.length;
 
-    // (Opcional recomendado: calcular ingresos sumando v.precio si existe en el contexto, 
-    // pero por ahora mantenemos la regla de $20 x lavado para no romper nada viejo).
-    const ingresos = completados * 20;
+    // Sumamos los precios reales de cada lavado
+    const ingresos = visitasCompletadas.reduce((sum, v) => {
+        // 1. Si la visita ya tiene el precio guardado (visitas nuevas), lo usamos
+        if (v.precio !== undefined) return sum + v.precio;
+        
+        // 2. Si es una visita vieja, buscamos el precio actual de ese servicio
+        const servicioMatch = servicios.find(s => s.titulo === v.tipoLavado);
+        const precioEncontrado = servicioMatch ? servicioMatch.precio : 0;
+        
+        return sum + precioEncontrado;
+    }, 0).toLocaleString();
 
     // Cálculo de calificación promedio
     const visitasCalificadas = visitasCompletadas.filter(v => v.calificacion);

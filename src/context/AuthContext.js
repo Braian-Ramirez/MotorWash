@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect } from 'react';
 import { auth, db } from '../config/firebase'; // Conexión a Firebase
 import {
     createUserWithEmailAndPassword, signInWithEmailAndPassword,
-    signOut, onAuthStateChanged
+    signOut, onAuthStateChanged, updatePassword
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore'; // Funciones de Firestore
 
@@ -48,13 +48,22 @@ export const AuthProvider = ({ children }) => {
         try {
             const docRef = doc(db, "usuarios", user.uid);
             await setDoc(docRef, datosNuevos, { merge: true });
-            // El useEffect (vigilante) se encargará de actualizar el estado 'user' automáticamente 
-            // si estuviéramos usando onSnapshot, pero como usamos getDoc, 
-            // vamos a actualizar el estado localmente para feedback inmediato:
             setUser({ ...user, ...datosNuevos });
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
+        }
+    };
+
+    // -- Nueva función: CAMBIAR CONTRASEÑA --
+    const changePassword = async (newPassword) => {
+        if (!auth.currentUser) return { success: false, error: "No hay sesión activa" };
+        try {
+            await updatePassword(auth.currentUser, newPassword);
+            return { success: true };
+        } catch (error) {
+            console.error("Error al cambiar contraseña:", error);
+            return { success: false, error: error.message, code: error.code };
         }
     };
 
@@ -100,7 +109,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, register, updateProfile }}>
+        <AuthContext.Provider value={{ user, login, logout, register, updateProfile, changePassword }}>
             {children}
         </AuthContext.Provider>
     );

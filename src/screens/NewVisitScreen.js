@@ -24,15 +24,20 @@ export default function NewVisitScreen({ navigation }) {
     const [showPicker, setShowPicker] = useState(false);
     const [fechaWeb, setFechaWeb] = useState('');
     const [encargado, setEncargado] = useState('Cualquiera');
-    const [tipoLavado, setTipoLavado] = useState('Lavado Sencillo');
+    const [tipoLavado, setTipoLavado] = useState(''); // Empezamos vacío para detectar el cambio
 
-    // 2. EL VIGILANTE: Pone el primer auto de la lista como opción por defecto
+    // 2. EL VIGILANTE: Pone el primer auto y el primer servicio como opción por defecto
     useEffect(() => {
+        // Inicializar vehículo
         if (vehiculos && vehiculos.length > 0 && vehiculo === '') {
             const v = vehiculos[0];
             setVehiculo(`${v.tipo} - ${v.marca} ${v.color} (${v.placa})`);
         }
-    }, [vehiculos]);
+        // Inicializar servicio (¡Aquí estaba el error del tiempo de 30 min!)
+        if (servicios && servicios.length > 0 && tipoLavado === '') {
+            setTipoLavado(servicios[0].titulo);
+        }
+    }, [vehiculos, servicios]);
 
     // 3. Funciones del calendario
     const onChangeDate = (event, selectedDate) => {
@@ -53,6 +58,7 @@ export default function NewVisitScreen({ navigation }) {
             fecha: Platform.OS === 'web' ? fechaWeb : date.toLocaleDateString(),
             tipoLavado,
             tiempoEstimado: servicioElegido ? servicioElegido.tiempoEstimado : 30, // 30 por defecto
+            precio: servicioElegido ? servicioElegido.precio : 0, // ¡Guardamos el precio real!
             encargado,
             vehiculo
         };

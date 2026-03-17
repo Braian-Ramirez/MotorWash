@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { db } from '../config/firebase';
-import { collection, onSnapshot, query, where, addDoc, updateDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { AuthContext } from './AuthContext';
 
 // 1. CREAMOS LA "NUBE" (El Contexto)
@@ -57,10 +57,20 @@ export const VehiclesProvider = ({ children }) => {
         }
     };
 
+    // Función global para ELIMINAR un vehículo
+    const removeVehicle = async (id) => {
+        try {
+            const docRef = doc(db, "vehiculos", id);
+            await deleteDoc(docRef);
+        } catch (error) {
+            console.error("Error al eliminar vehículo:", error);
+        }
+    };
+
     return (
         // 3. ENCHUFAMOS LOS DATOS A LA NUBE
         // Todo lo que pongamos en "value" estará disponible para CUALQUIER pantalla
-        <VehiclesContext.Provider value={{ vehiculos, addVehicle, updateVehicle }}>
+        <VehiclesContext.Provider value={{ vehiculos, addVehicle, updateVehicle, removeVehicle }}>
             {children}
         </VehiclesContext.Provider>
     );

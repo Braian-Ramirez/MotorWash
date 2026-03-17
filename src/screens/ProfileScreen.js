@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 
 export default function ProfileScreen({ navigation }) {
-    const { logout, user, updateProfile } = useContext(AuthContext);
+    const { logout, user, updateProfile, changePassword } = useContext(AuthContext);
     
     // Inicializamos los estados con los datos reales del usuario
     const [nombre, setNombre] = useState(user?.nombre || '');
@@ -34,16 +34,50 @@ export default function ProfileScreen({ navigation }) {
             return;
         }
 
-        const result = await updateProfile({
-            nombre: nombre,
-            telefono: telefono
-        });
+        try {
+            // 1. Actualización de datos básicos en Firestore
+            const resultProfile = await updateProfile({
+                nombre: nombre,
+                telefono: telefono
+            });
 
-        if (result.success) {
+            if (!resultProfile.success) {
+                Alert.alert('Error', 'No se pudo actualizar el perfil: ' + resultProfile.error);
+                return;
+            }
+
+            // 2. ¿El usuario intentó cambiar la contraseña?
+            // Detectamos si la contraseña ya no es el placeholder '******'
+            if (password !== '******' && password.trim() !== '') {
+                if (password !== confirmPassword) {
+                    Alert.alert("Error", "Las contraseñas no coinciden.");
+                    return;
+                }
+                if (password.length < 6) {
+                    Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres.");
+                    return;
+                }
+
+                const resultPass = await changePassword(password);
+                
+                if (!resultPass.success) {
+                    if (resultPass.code === 'auth/requires-recent-login') {
+                        Alert.alert("Acción Requerida", "Por seguridad, esta acción requiere que hayas iniciado sesión recientemente. Por favor, cierra sesión y vuelve a entrar para cambiar tu contraseña.");
+                    } else {
+                        Alert.alert("Error", "No se pudo cambiar la contraseña: " + resultPass.error);
+                    }
+                    return; // No cerramos el modo edición para que el usuario pueda corregir o reintentar
+                }
+            }
+
+            // Si todo salió bien
             setIsEditing(false);
-            Alert.alert('Éxito', 'Perfil actualizado en la base de datos');
-        } else {
-            Alert.alert('Error', 'No se pudo actualizar: ' + result.error);
+            setPassword('******'); // Reset al placeholder
+            setConfirmPassword('');
+            Alert.alert('Éxito', 'Perfil y datos actualizados correctamente');
+            
+        } catch (error) {
+            Alert.alert("Error", "Ocurrió un error inesperado al guardar.");
         }
     };
 

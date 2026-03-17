@@ -86,10 +86,13 @@ export default function AgendaScreen({ navigation }) {
                     // Tiempo transcurrido en minutos
                     const minutosTranscurridos = Math.floor((Date.now() - visita.horaInicio) / 60000);
                     // Tiempo restante estimado
-                    const tiempoEstimado = visita.tiempoEstimado || 30; // Usamos 30 si por alguna razón no tiene
+                    const tiempoEstimado = visita.tiempoEstimado || 0; 
                     const minutosRestantes = tiempoEstimado - minutosTranscurridos;
 
-                    if (minutosRestantes > 0) {
+                    if (tiempoEstimado === 0) {
+                        tiempoRestanteStr = "Calculando tiempo...";
+                        progressBarWidth = "50%";
+                    } else if (minutosRestantes > 0) {
                         tiempoRestanteStr = `Faltan aprox. ${minutosRestantes} minutos`;
                         progressBarWidth = `${(minutosTranscurridos / tiempoEstimado) * 100}%`;
                     } else {
