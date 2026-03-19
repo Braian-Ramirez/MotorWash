@@ -120,6 +120,17 @@ export default function AgendaScreen({ navigation }) {
                         <Text style={styles.cardText}>Encargado: <Text style={styles.cardData}>{visita.encargado}</Text></Text>
                         <Text style={styles.cardText}>Vehículo: <Text style={styles.cardData}>{visita.vehiculo}</Text></Text>
 
+                        {/* 🎟️ Mostrar botón de QR si está pendiente */}
+                        {visita.estado === 'pendiente' && (
+                            <TouchableOpacity
+                                style={[styles.addButton, { backgroundColor: '#3b5998', width: '100%', marginTop: 15, padding: 10, borderRadius: 5, marginBottom: 0 }]}
+                                onPress={() => navigation.navigate('VisitQR', { visitaData: visita.id })}
+                            >
+                                <MaterialCommunityIcons name="qrcode" size={20} color="#fff" style={{ position: 'absolute', left: 15, top: 10 }} />
+                                <Text style={styles.addButtonText}>Mostrar Código QR</Text>
+                            </TouchableOpacity>
+                        )}
+
                         {/* 🔥 Mostrar el Progreso si está siendo lavado */}
                         {visita.estado === 'en_progreso' && (
                             <View style={styles.timerContainer}>

@@ -2,13 +2,15 @@ import React, { useState, useContext } from 'react';
 import { Text, View, StyleSheet, Button, TouchableOpacity, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { VisitsContext } from '../context/VisitsContext';
+import { AuthContext } from '../context/AuthContext'; // Importado para saber quién escanea
 
 export default function QRScannerScreen({ navigation }) {
     const [permission, requestPermission] = useCameraPermissions();
     const [scanned, setScanned] = useState(false);
 
-    // ✅ CORRECCIÓN: Extraemos tanto 'visitas' como 'completarVisita'
-    const { visitas, completarVisita } = useContext(VisitsContext);
+    // ✅ Ahora extraemos 'iniciarVisita' del contexto de visitas
+    const { visitas, iniciarVisita } = useContext(VisitsContext);
+    const { user } = useContext(AuthContext); // Extraemos al empleado
 
     if (!permission) return <View />;
     if (!permission.granted) {
@@ -20,36 +22,48 @@ export default function QRScannerScreen({ navigation }) {
         );
     }
 
-    const handleBarcodeScanned = ({ data }) => {
+    const handleBarcodeScanned = async ({ data }) => {
         setScanned(true);
         try {
-            const info = JSON.parse(data);
+            // El QR ya es directamente el ID del lavado
+            const idEscaneado = data;
 
-            // Buscamos el trabajo en nuestra lista global
-            const trabajoEncontrado = visitas.find(v =>
-                v.vehiculo === info.vehiculo && v.estado !== 'completado'
-            );
+            // Buscamos el trabajo en nuestra lista global por su ID
+            const trabajoEncontrado = visitas.find(v => v.id === idEscaneado);
 
             if (trabajoEncontrado) {
-                Alert.alert(
-                    "¡Trabajo Identificado!",
-                    `Vehículo: ${info.vehiculo}\nServicio: ${info.tipoLavado}`,
-                    [
-                        { text: "Cancelar", onPress: () => setScanned(false) },
-                        {
-                            text: "Completar Lavado", onPress: () => {
-                                completarVisita(trabajoEncontrado.id);
-                                navigation.goBack();
+                if (trabajoEncontrado.estado === 'pendiente') {
+                    // Si el cliente eligió 'Cualquiera', le asignamos el nombre de este empleado
+                    const nombreEmpleado = trabajoEncontrado.encargado === 'Cualquiera' ? user.nombre : null;
+                    
+                    Alert.alert(
+                        "¡Trabajo Identificado!",
+                        `Vehículo: ${trabajoEncontrado.vehiculo}\nServicio: ${trabajoEncontrado.tipoLavado}\n¿Deseas iniciar este lavado ahora mismo?`,
+                        [
+                            { text: "Cancelar", onPress: () => setScanned(false) },
+                            {
+                                text: "Iniciar Lavado", onPress: async () => {
+                                    // Pasa el ID y opcionalmente el nombre del empleado a la base de datos
+                                    await iniciarVisita(trabajoEncontrado.id, nombreEmpleado);
+                                    // Te devuelve a la pantalla ActiveJobs de inmediato
+                                    navigation.goBack(); 
+                                }
                             }
-                        }
-                    ]
-                );
+                        ]
+                    );
+                } else if (trabajoEncontrado.estado === 'en_progreso') {
+                    Alert.alert("Aviso", "Este lavado ya comenzó.");
+                    setScanned(false);
+                } else {
+                    Alert.alert("Aviso", "Este lavado ya está completado.");
+                    setScanned(false);
+                }
             } else {
-                Alert.alert("Aviso", "Este vehículo no tiene citas pendientes hoy.");
+                Alert.alert("Aviso", "No se encontró el lavado en la base de datos.");
                 setScanned(false);
             }
         } catch (e) {
-            Alert.alert("Error", "El código escaneado no es un ticket válido.");
+            Alert.alert("Error", "El código escaneado no es válido.");
             setScanned(false);
         }
     };
@@ -62,7 +76,6 @@ export default function QRScannerScreen({ navigation }) {
                 barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
             />
 
-            {/* ✅ CORRECCIÓN: El "marco" visual ahora está dentro del return */}
             <View style={styles.overlay}>
                 <View style={styles.unfocusedContainer} />
                 <View style={styles.focusedContainer}>

@@ -13,13 +13,12 @@ export default function VisitQRScreen({ route, navigation }) {
             <Text style={styles.title}>¡Cita Agendada!</Text>
 
             <Text style={styles.subtitle}>
-                Muestra este código QR al encargado cuando llegues al lavadero para iniciar el servicio.
+                Muestra este código QR al encargado cuando llegues al lavadero para iniciar el servicio. Puedes recuperarlo en la pantalla "Mis Visitas".
             </Text>
 
             <View style={styles.qrContainer}>
                 <QRCode
-                    // Aquí es donde metemos todos los datos (Fecha, Vehiculo, etc)
-                    // que serán transformados en el dibujo del QR
+                    // Aquí metemos el ID único de la cita en Firebase
                     value={visita}
                     size={250}
                     color="black"
@@ -28,7 +27,7 @@ export default function VisitQRScreen({ route, navigation }) {
             </View>
 
             {/* Para asegurarnos de qué datos tiene escondidos el QR, lo podemos escribir abajo */}
-            <Text style={styles.dataText}>ID de Cita segura generada.</Text>
+            <Text style={styles.dataText}>Ticket ID: {visita.substring(0,8)}...</Text>
 
             <TouchableOpacity style={styles.buttonSecondary} onPress={() => navigation.navigate('Home')}>
                 <Text style={styles.buttonTextBlue}>Volver al Inicio</Text>

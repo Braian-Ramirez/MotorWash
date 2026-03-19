@@ -26,7 +26,7 @@ export const listenToUserVisits = (user, onDataUpdate) => {
 };
 
 //  Crear
-export const crearVisitInDB = async (visitaData, userId) => {
+export const crearVisitaInDB = async (visitaData, userId) => {
     try {
         const docRef = await addDoc(collection(db, COLLECTION_NAME), {
             ...visitaData,
@@ -40,11 +40,9 @@ export const crearVisitInDB = async (visitaData, userId) => {
 };
 
 // completar visita
-export const completarVisitInDB = async (visitaId) => {
+export const completarVisitaInDB = async (visitaId) => {
     try {
-        // En lugar de addDoc, usamos doc() para "apuntar" a la visita que ya existe.
         const docRef = doc(db, COLLECTION_NAME, visitaId);
-
         await updateDoc(docRef, { estado: 'completado' });
         return { success: true };
     } catch (error) {
@@ -53,24 +51,30 @@ export const completarVisitInDB = async (visitaId) => {
     }
 };
 
-// Iniciar visita 
-export const iniciarVisitInDB = async (visitaId) => {
+// Iniciar visita y asignar empleado
+export const iniciarVisitaInDB = async (visitaId, nombreEmpleado = null) => {
     try {
         const docRef = doc(db, COLLECTION_NAME, visitaId);
-        await updateDoc(docRef, {
+        
+        const updateData = {
             estado: 'en_progreso',
             horaInicio: Date.now()
-        });
+        };
+        
+        if (nombreEmpleado) {
+             updateData.encargado = nombreEmpleado;
+        }
+
+        await updateDoc(docRef, updateData);
         return { success: true };
     } catch (error) {
         console.error("Error al iniciar visita:", error);
         return { success: false, error: error.message };
     }
-
 };
 
 // Calificar visita 
-export const calificarVisitInDB = async (visitaId, calificacion, comentario) => {
+export const calificarVisitaInDB = async (visitaId, calificacion, comentario) => {
     try {
         const docRef = doc(db, COLLECTION_NAME, visitaId);
         await updateDoc(docRef, {

@@ -1,8 +1,8 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import {
-    calificarVisitInDB, iniciarVisitInDB,
-    crearVisitInDB, completarVisitInDB,
+    calificarVisitaInDB, iniciarVisitaInDB,
+    crearVisitaInDB, completarVisitaInDB,
     listenToUserVisits
 } from '../services/VisitsService';
 export const VisitsContext = createContext();
@@ -30,7 +30,7 @@ export const VisitsProvider = ({ children }) => {
 
     // Función global para agendar una nueva visita
     const addVisit = async (nuevaVisita) => {
-        if (!user) return;
+        if (!user) return { success: false, error: 'No user' };
 
         // Le pasamos la visita completa MÁS unos datos extra al servicio
         const visitaFija = {
@@ -39,25 +39,26 @@ export const VisitsProvider = ({ children }) => {
             fechaCreado: new Date().toISOString()
         };
 
-        const result = await crearVisitInDB(visitaFija, user.uid);
+        const result = await crearVisitaInDB(visitaFija, user.uid);
         if (!result.success) console.error("Error al agendar:", result.error);
+        return result; // ¡Importante devolverlo para extraer el ID!
     };
 
     // Función completar visita
     const completarVisita = async (id) => {
-        const result = await completarVisitInDB(id);
+        const result = await completarVisitaInDB(id);
         if (!result.success) console.error("Error al completar visitia:", result.error);
     }
 
     // Función iniciar visita
-    const iniciarVisita = async (id) => {
-        const result = await iniciarVisitInDB(id);
+    const iniciarVisita = async (id, nombreEncargado = null) => {
+        const result = await iniciarVisitaInDB(id, nombreEncargado);
         if (!result.success) console.error("Erroral iniciar visita:", result.error);
     }
 
     // Calificar visita
     const calificarVisita = async (id, estrellas, comentario) => {
-        const result = await calificarVisitInDB(id, estrellas, comentario);
+        const result = await calificarVisitaInDB(id, estrellas, comentario);
         if (!result.success) console.error("Error al calificar la visita:", result.error);
     }
 

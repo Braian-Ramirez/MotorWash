@@ -51,7 +51,7 @@ export default function NewVisitScreen({ navigation }) {
         setMode(currentMode);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const servicioElegido = servicios.find(s => s.titulo === tipoLavado);
         
         const nuevaCita = {
@@ -62,9 +62,12 @@ export default function NewVisitScreen({ navigation }) {
             encargado,
             vehiculo
         };
-        addVisit(nuevaCita);
-        const informacionVisita = JSON.stringify(nuevaCita);
-        navigation.navigate('VisitQR', { visitaData: informacionVisita });
+        const result = await addVisit(nuevaCita);
+        if (result && result.success) {
+             navigation.navigate('VisitQR', { visitaData: result.id });
+        } else {
+             alert('No se pudo guardar la cita, intenta de nuevo.');
+        }
     };
 
     return (
