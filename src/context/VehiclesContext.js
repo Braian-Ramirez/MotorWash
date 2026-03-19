@@ -1,70 +1,57 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { db } from '../config/firebase';
-import { collection, onSnapshot, query, where, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { AuthContext } from './AuthContext';
+// Importamos nuestro nuevo MODELO (Servicios)
+import {
+    listenToUserVehicles,
+    createVehicleInDB,
+    updateVehicleInDB,
+    deleteVehicleFromDB
+} from '../services/VehiclesService';
 
-// 1. CREAMOS LA "NUBE" (El Contexto)
-// Esto es lo que las pantallas van a importar para conectarse
 export const VehiclesContext = createContext();
 
-// 2. CREAMOS EL PROVEEDOR (El componente que envuelve a la app)
-// Este componente guardará los datos reales y se los regalará a los "children" (pantallas)
 export const VehiclesProvider = ({ children }) => {
-
     const [vehiculos, setVehiculos] = useState([]);
     const { user } = useContext(AuthContext);
 
-    // 🔄 Sincronizar con Firebase (Solo los carros del usuario actual)
+    // Usamos el modelo para la Búsqueda (Controlador)
     useEffect(() => {
         if (!user) {
             setVehiculos([]);
             return;
         }
 
-        const q = query(collection(db, "vehiculos"), where("userId", "==", user.uid));
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const lista = [];
-            querySnapshot.forEach((doc) => {
-                lista.push({ ...doc.data(), id: doc.id });
-            });
-            setVehiculos(lista);
+        // Llamamos al servicio. Él hará el trabajo de Firebase y nos devolverá
+        // la lista a través de la función (callback) que le pasamos.
+        const unsubscribe = listenToUserVehicles(user.uid, (data) => {
+            setVehiculos(data);
         });
 
         return () => unsubscribe();
     }, [user]);
 
-    // Función global para AGREGAR un vehículo
+    // Usamos el modelo para AGREGAR (Controlador)
     const addVehicle = async (nuevoVehiculo) => {
         if (!user) return;
-        try {
-            await addDoc(collection(db, "vehiculos"), {
-                ...nuevoVehiculo,
-                userId: user.uid
-            });
-        } catch (error) {
-            console.error("Error al añadir vehículo:", error);
+        // Delegamos la escritura a la base de datos al servicio
+        const result = await createVehicleInDB(nuevoVehiculo, user.uid);
+        if (!result.success) {
+            // Podríamos mostrar un Alert aquí en el futuro
+            console.error("Fallo controlador (add):", result.error);
         }
     };
 
-    // Función global para EDITAR un vehículo
+    // Usamos el modelo para EDITAR (Controlador)
     const updateVehicle = async (vehiculoEditado) => {
-        try {
-            const { id, ...datos } = vehiculoEditado;
-            const docRef = doc(db, "vehiculos", id);
-            await updateDoc(docRef, datos);
-        } catch (error) {
-            console.error("Error al actualizar vehículo:", error);
-        }
+        const { id, ...datos } = vehiculoEditado;
+        const result = await updateVehicleInDB(id, datos);
+        if (!result.success) console.error("Fallo controlador (update):", result.error);
     };
 
-    // Función global para ELIMINAR un vehículo
+    // Usamos el modelo para ELIMINAR (Controlador)
     const removeVehicle = async (id) => {
-        try {
-            const docRef = doc(db, "vehiculos", id);
-            await deleteDoc(docRef);
-        } catch (error) {
-            console.error("Error al eliminar vehículo:", error);
-        }
+        const result = await deleteVehicleFromDB(id);
+        if (!result.success) console.error("Fallo controlador (remove):", result.error);
     };
 
     return (

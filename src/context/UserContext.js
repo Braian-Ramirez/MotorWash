@@ -1,33 +1,23 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { db } from '../config/firebase';
-import { collection, onSnapshot, updateDoc, doc } from 'firebase/firestore';
+import { listenToUsers, updateUserRoleInDB } from '../services/UserService';
 
 export const UsersContext = createContext();
 
 export const UsersProvider = ({ children }) => {
     const [usuarios, setUsuarios] = useState([]);
 
-    // 🔄 Sincronizar con Firebase en tiempo real (Todos los usuarios para el Admin)
+    // 🔄 Sincronizar con Modelo en tiempo real (Todos los usuarios para el Admin)
     useEffect(() => {
-        const q = collection(db, "usuarios");
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const lista = [];
-            querySnapshot.forEach((doc) => {
-                lista.push({ ...doc.data(), id: doc.id });
-            });
-            setUsuarios(lista);
+        const unsubscribe = listenToUsers((data) => {
+            setUsuarios(data);
         });
         return () => unsubscribe();
     }, []);
 
     // Función que usará el admin para cambiar el rol
     const cambiarRol = async (id, nuevoRol) => {
-        try {
-            const docRef = doc(db, "usuarios", id);
-            await updateDoc(docRef, { rol: nuevoRol });
-        } catch (error) {
-            console.error("Error al cambiar rol:", error);
-        }
+        const result = await updateUserRoleInDB(id, nuevoRol);
+        if (!result.success) console.error("Error al cambiar rol:", result.error);
     };
 
     return (

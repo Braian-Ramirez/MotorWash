@@ -1,8 +1,10 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { db } from '../config/firebase';
-import { collection, onSnapshot, query, where, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { AuthContext } from './AuthContext';
-
+import {
+    calificarVisitInDB, iniciarVisitInDB,
+    crearVisitInDB, completarVisitInDB,
+    listenToUserVisits
+} from '../services/VisitsService';
 export const VisitsContext = createContext();
 
 export const VisitsProvider = ({ children }) => {
@@ -10,82 +12,62 @@ export const VisitsProvider = ({ children }) => {
     const [visitas, setVisitas] = useState([]);
     const { user } = useContext(AuthContext);
 
-    // 🔄 Sincronizar con Firebase en tiempo real
+    // Sincronizar con Firebase en tiempo real
     useEffect(() => {
         if (!user) {
             setVisitas([]);
             return;
         }
 
-        let q = collection(db, "visitas");
-        
-        // Si es cliente, solo ve sus propias citas
-        if (user.role === 'client') {
-            q = query(collection(db, "visitas"), where("userId", "==", user.uid));
-        }
-        // Si es admin o empleado, ve todas por ahora (puedes filtrar por encargado luego)
-
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const lista = [];
-            querySnapshot.forEach((doc) => {
-                lista.push({ ...doc.data(), id: doc.id });
-            });
-            setVisitas(lista);
+        // Llamamos al servicio. Él hará el trabajo de Firebase y nos devolverá
+        // la lista a través de la función (callback) que le pasamos.
+        const unsubscribe = listenToUserVisits(user, (data) => {
+            setVisitas(data);
         });
 
         return () => unsubscribe();
     }, [user]);
 
-    // Función para agendar una nueva visita
+    // Función global para agendar una nueva visita
     const addVisit = async (nuevaVisita) => {
         if (!user) return;
-        try {
-            await addDoc(collection(db, "visitas"), {
-                ...nuevaVisita,
-                userId: user.uid,
-                estado: 'pendiente',
-                fechaCreado: new Date().toISOString()
-            });
-        } catch (error) {
-            console.error("Error al agendar visita:", error);
-        }
+
+        // Le pasamos la visita completa MÁS unos datos extra al servicio
+        const visitaFija = {
+            ...nuevaVisita,
+            estado: 'pendiente',
+            fechaCreado: new Date().toISOString()
+        };
+
+        const result = await crearVisitInDB(visitaFija, user.uid);
+        if (!result.success) console.error("Error al agendar:", result.error);
     };
 
+    // Función completar visita
     const completarVisita = async (id) => {
-        try {
-            const docRef = doc(db, "visitas", id);
-            await updateDoc(docRef, { estado: 'completado' });
-        } catch (error) {
-            console.error("Error al completar visita:", error);
-        }
-    };
+        const result = await completarVisitInDB(id);
+        if (!result.success) console.error("Error al completar visitia:", result.error);
+    }
 
-    // Nueva función para iniciar el temporizador
+    // Función iniciar visita
     const iniciarVisita = async (id) => {
-        try {
-            const docRef = doc(db, "visitas", id);
-            await updateDoc(docRef, { 
-                estado: 'en_progreso', 
-                horaInicio: Date.now() 
-            });
-        } catch (error) {
-            console.error("Error al iniciar visita:", error);
-        }
-    };
+        const result = await iniciarVisitInDB(id);
+        if (!result.success) console.error("Erroral iniciar visita:", result.error);
+    }
 
-    // Nueva función para calificar el servicio
-    const calificarVisita = async (id, estrellas, comentario = '') => {
-        try {
-            const docRef = doc(db, "visitas", id);
-            await updateDoc(docRef, { calificacion: estrellas, comentario });
-        } catch (error) {
-            console.error("Error al calificar visita:", error);
-        }
-    };
+    // Calificar visita
+    const calificarVisita = async (id, estrellas, comentario) => {
+        const result = await calificarVisitInDB(id, estrellas, comentario);
+        if (!result.success) console.error("Error al calificar la visita:", result.error);
+    }
 
     return (
-        <VisitsContext.Provider value={{ visitas, addVisit, completarVisita, iniciarVisita, calificarVisita }}>
+        <VisitsContext.Provider value={{
+            visitas,
+            addVisit, completarVisita,
+            iniciarVisita, calificarVisita
+        }}>
             {children}
-        </VisitsContext.Provider>
-    );
+
+        </VisitsContext.Provider>);
 };

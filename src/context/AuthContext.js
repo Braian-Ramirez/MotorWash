@@ -1,109 +1,52 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { auth, db } from '../config/firebase'; // Conexión a Firebase
-import {
-    createUserWithEmailAndPassword, signInWithEmailAndPassword,
-    signOut, onAuthStateChanged, updatePassword
-} from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore'; // Funciones de Firestore
+import { 
+    registerUserInDB, loginUser, updateProfileInDB, 
+    changeUserPassword, logoutUser, listenToAuthChanges 
+} from '../services/AuthService';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
 
-    // -- 1. REGISTRO REAL --
+    // -- 1. REGISTRO (Delegado) --
     const register = async (email, password, nombre, telefono) => {
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            // 2. Guardar datos en Firestore
-            await setDoc(doc(db, "usuarios", user.uid), {
-                nombre: nombre,
-                telefono: telefono,
-                email: email,
-                rol: 'client', // Por defecto cliente
-                fechaRegistro: new Date().toISOString()
-            });
-
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message, code: error.code };
-        }
+        return await registerUserInDB(email, password, nombre, telefono);
     };
 
-    // -- 2. LOGIN REAL --
+    // -- 2. LOGIN (Delegado) --
     const login = async (email, password) => {
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message, code: error.code };
-        }
+        return await loginUser(email, password);
     };
 
-    // -- Nueva función: ACTUALIZAR PERFIL --
+    // -- 3. ACTUALIZAR PERFIL (Delegado) --
     const updateProfile = async (datosNuevos) => {
         if (!user) return { success: false, error: "No hay usuario logueado" };
-        try {
-            const docRef = doc(db, "usuarios", user.uid);
-            await setDoc(docRef, datosNuevos, { merge: true });
+        const result = await updateProfileInDB(user.uid, datosNuevos);
+        
+        if (result.success) {
             setUser({ ...user, ...datosNuevos });
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
         }
+        return result;
     };
 
-    // -- Nueva función: CAMBIAR CONTRASEÑA --
+    // -- 4. CAMBIAR CONTRASEÑA (Delegado) --
     const changePassword = async (newPassword) => {
-        if (!auth.currentUser) return { success: false, error: "No hay sesión activa" };
-        try {
-            await updatePassword(auth.currentUser, newPassword);
-            return { success: true };
-        } catch (error) {
-            console.error("Error al cambiar contraseña:", error);
-            return { success: false, error: error.message, code: error.code };
-        }
+        return await changeUserPassword(newPassword);
     };
 
-    // -- 3. LOGOUT REAL --
+    // -- 5. LOGOUT (Delegado) --
     const logout = async () => {
-        try {
-            await signOut(auth);
+        const result = await logoutUser();
+        if (result.success) {
             setUser(null);
-        } catch (error) {
-            console.error("Error al cerrar sesión", error);
         }
     };
 
-    // -- 4. EL VIGILANTE DE FIREBASE --
+    // -- 6. EL VIGILANTE DE AUTENTICACIÓN (Delegado) --
     useEffect(() => {
-        // Firebase revisa constantemente si alguien entra o sale
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                // Ir a buscar el rol al expediente en la DB
-                const docRef = doc(db, "usuarios", currentUser.uid);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    setUser({
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        ...data, // Esto trae nombre, telefono, rol, etc.
-                        role: data.rol // Mapeamos rol a role por consistencia
-                    });
-                } else {
-                    setUser({
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        role: 'client'
-                    });
-                }
-            } else {
-                setUser(null);
-            }
+        const unsubscribe = listenToAuthChanges((currentUserData) => {
+            setUser(currentUserData);
         });
         return () => unsubscribe();
     }, []);
@@ -113,5 +56,4 @@ export const AuthProvider = ({ children }) => {
             {children}
         </AuthContext.Provider>
     );
-
 };
