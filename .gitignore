@@ -32,7 +32,7 @@ yarn-error.*
 
 # local env files
 # Descomenta .env si quieres subir tus credenciales (no recomendado para repos públicos)
-# .env
+.env
 .env*.local
 
 # typescript
