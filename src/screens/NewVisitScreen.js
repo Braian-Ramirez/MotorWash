@@ -6,6 +6,8 @@ import { VisitsContext } from '../context/VisitsContext';
 import { VehiclesContext } from '../context/VehiclesContext';
 import { ServicesContext } from '../context/ServicesContext';
 import { UsersContext } from '../context/UserContext';
+// 🔗 Kotlin: cálculo de precio con recargo por tipo de vehículo
+import { calcularPrecioFinal } from '../native/NativeBridge';
 
 export default function NewVisitScreen({ navigation }) {
 
@@ -17,27 +19,45 @@ export default function NewVisitScreen({ navigation }) {
     // Filtramos los usuarios para obtener solo los empleados
     const empleados = usuarios.filter(u => u.rol === 'employee');
 
-    // 1. ESTADOS (Aquí es donde estaba el problema, ya restaurados)
+    // 1. ESTADOS
     const [vehiculo, setVehiculo] = useState('');
+    const [tipoVehiculo, setTipoVehiculo] = useState(''); // tipo puro para enviar a Kotlin
     const [date, setDate] = useState(new Date());
     const [mode, setMode] = useState('date');
     const [showPicker, setShowPicker] = useState(false);
     const [fechaWeb, setFechaWeb] = useState('');
     const [encargado, setEncargado] = useState('Cualquiera');
-    const [tipoLavado, setTipoLavado] = useState(''); // Empezamos vacío para detectar el cambio
+    const [tipoLavado, setTipoLavado] = useState('');
+    // Estado del precio calculado por Kotlin
+    const [precioInfo, setPrecioInfo] = useState({ precioFinal: 0, recargoPorcentaje: 0 });
 
     // 2. EL VIGILANTE: Pone el primer auto y el primer servicio como opción por defecto
     useEffect(() => {
-        // Inicializar vehículo
         if (vehiculos && vehiculos.length > 0 && vehiculo === '') {
             const v = vehiculos[0];
             setVehiculo(`${v.tipo} - ${v.marca} ${v.color} (${v.placa})`);
+            setTipoVehiculo(v.tipo); // guardamos el tipo puro para Kotlin
         }
-        // Inicializar servicio (¡Aquí estaba el error del tiempo de 30 min!)
         if (servicios && servicios.length > 0 && tipoLavado === '') {
             setTipoLavado(servicios[0].titulo);
         }
     }, [vehiculos, servicios]);
+
+    // 3. KOTLIN: Recalcula el precio cada vez que cambia el vehículo o el servicio
+    useEffect(() => {
+        const recalcular = async () => {
+            const servicioElegido = servicios.find(s => s.titulo === tipoLavado);
+            if (!servicioElegido || !tipoVehiculo) return;
+
+            // 🔗 Delegamos el cálculo a Kotlin
+            const resultado = await calcularPrecioFinal(
+                servicioElegido.precio,
+                tipoVehiculo
+            );
+            setPrecioInfo(resultado);
+        };
+        recalcular();
+    }, [tipoLavado, tipoVehiculo, servicios]);
 
     // 3. Funciones del calendario
     const onChangeDate = (event, selectedDate) => {
@@ -53,20 +73,22 @@ export default function NewVisitScreen({ navigation }) {
 
     const handleSave = async () => {
         const servicioElegido = servicios.find(s => s.titulo === tipoLavado);
-        
+
         const nuevaCita = {
             fecha: Platform.OS === 'web' ? fechaWeb : date.toLocaleDateString(),
             tipoLavado,
-            tiempoEstimado: servicioElegido ? servicioElegido.tiempoEstimado : 30, // 30 por defecto
-            precio: servicioElegido ? servicioElegido.precio : 0, // ¡Guardamos el precio real!
+            tiempoEstimado: servicioElegido ? servicioElegido.tiempoEstimado : 30,
+            // 🔗 Usamos el precio calculado por Kotlin (con recargo incluido)
+            precio: precioInfo.precioFinal || (servicioElegido ? servicioElegido.precio : 0),
             encargado,
             vehiculo
         };
+        // VisitsContext llamará a Kotlin para validar antes de guardar en Firebase
         const result = await addVisit(nuevaCita);
         if (result && result.success) {
-             navigation.navigate('VisitQR', { visitaData: result.id });
+            navigation.navigate('VisitQR', { visitaData: result.id });
         } else {
-             alert('No se pudo guardar la cita, intenta de nuevo.');
+            alert(result?.error || 'No se pudo guardar la cita, intenta de nuevo.');
         }
     };
 
@@ -104,9 +126,23 @@ export default function NewVisitScreen({ navigation }) {
 
                 <Text style={styles.label}>Vehículo:</Text>
                 <View style={styles.pickerContainer}>
-                    <Picker selectedValue={vehiculo} onValueChange={setVehiculo}>
+                    <Picker
+                        selectedValue={vehiculo}
+                        onValueChange={(val) => {
+                            setVehiculo(val);
+                            // Extraemos el tipo del vehículo para enviarlo a Kotlin
+                            const vObj = vehiculos.find(v =>
+                                `${v.tipo} - ${v.marca} ${v.color} (${v.placa})` === val
+                            );
+                            if (vObj) setTipoVehiculo(vObj.tipo);
+                        }}
+                    >
                         {vehiculos.map((v) => (
-                            <Picker.Item key={v.id} label={`${v.tipo} - ${v.marca} ${v.color} (${v.placa})`} value={`${v.tipo} - ${v.marca} ${v.color} (${v.placa})`} />
+                            <Picker.Item
+                                key={v.id}
+                                label={`${v.tipo} - ${v.marca} ${v.color} (${v.placa})`}
+                                value={`${v.tipo} - ${v.marca} ${v.color} (${v.placa})`}
+                            />
                         ))}
                     </Picker>
                 </View>
@@ -122,7 +158,17 @@ export default function NewVisitScreen({ navigation }) {
                             />
                         ))}
                     </Picker>
+                </View>
 
+                {/* 🔗 Precio calculado por Kotlin con recargo por tipo de vehículo */}
+                <View style={styles.precioContainer}>
+                    <Text style={styles.precioLabel}>Precio total estimado:</Text>
+                    <Text style={styles.precioValor}>${precioInfo.precioFinal?.toFixed(2) ?? '0.00'}</Text>
+                    {precioInfo.recargoPorcentaje > 0 && (
+                        <Text style={styles.recargoBadge}>
+                            +{precioInfo.recargoPorcentaje}% recargo por tipo de vehículo
+                        </Text>
+                    )}
                 </View>
             </View>
 
@@ -149,6 +195,11 @@ const styles = StyleSheet.create({
     dateTimeButton: { width: '48%', height: 50, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#ddd', justifyContent: 'center', alignItems: 'center' },
     dateTimeText: { fontSize: 16, color: '#333', fontWeight: 'bold' },
     pickerContainer: { backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#ddd', marginBottom: 15, height: 50, justifyContent: 'center' },
+    // Bloque de precio calculado por Kotlin
+    precioContainer: { backgroundColor: '#e8f5e9', borderRadius: 10, padding: 15, marginBottom: 15, alignItems: 'center', borderWidth: 1, borderColor: '#a5d6a7' },
+    precioLabel: { fontSize: 14, color: '#388e3c', fontWeight: '600' },
+    precioValor: { fontSize: 28, fontWeight: 'bold', color: '#1b5e20', marginVertical: 4 },
+    recargoBadge: { fontSize: 12, color: '#e65100', backgroundColor: '#fff3e0', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, overflow: 'hidden', fontWeight: '600' },
     buttonRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 10 },
     actionButton: { width: '48%', height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: 8 },
     saveButton: { backgroundColor: '#4caf50' },

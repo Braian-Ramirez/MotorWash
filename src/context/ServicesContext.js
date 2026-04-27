@@ -1,19 +1,24 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { listenToServices, updateServiceInDB, createServiceInDB } from '../services/ServicesService';
+import { AuthContext } from './AuthContext';
 
 export const ServicesContext = createContext();
 
 export const ServicesProvider = ({ children }) => {
-    // 💡 Estos son los servicios que el admin podrá cambiar
     const [servicios, setServicios] = useState([]);
+    const { user } = useContext(AuthContext);
 
-    // 🔄 Sincronizar (Delegado al Modelo)
     useEffect(() => {
+        if (!user) {
+            setServicios([]);
+            return;
+        }
+
         const unsubscribe = listenToServices((data) => {
             setServicios(data);
         });
         return () => unsubscribe();
-    }, []);
+    }, [user]);
 
     // Función para actualizar un servicio existente
     const actualizarServicio = async (id, nuevosDatos) => {

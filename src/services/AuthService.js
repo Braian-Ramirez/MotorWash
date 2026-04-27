@@ -64,22 +64,37 @@ export const logoutUser = async () => {
     }
 };
 
-// 📡 Sincronización de Sesión (Vigilante)
 export const listenToAuthChanges = (onUserChange) => {
+    console.log("[AuthService] Suscribiendo onAuthStateChanged...");
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        console.log("[AuthService] Firebase Auth detectó usuario:", currentUser ? currentUser.email : "Ninguno");
+        
         if (currentUser) {
-            const docRef = doc(db, "usuarios", currentUser.uid);
-            const docSnap = await getDoc(docRef);
+            try {
+                console.log("[AuthService] Buscando perfil en Firestore para UID:", currentUser.uid);
+                const docRef = doc(db, "usuarios", currentUser.uid);
+                const docSnap = await getDoc(docRef);
 
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                onUserChange({
-                    uid: currentUser.uid,
-                    email: currentUser.email,
-                    ...data,
-                    role: data.rol
-                });
-            } else {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    console.log("[AuthService] Datos encontrados en Firestore:", data);
+                    onUserChange({
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        ...data,
+                        role: data.rol
+                    });
+                } else {
+                    console.warn("[AuthService] No existe documento en la colección 'usuarios' para este UID.");
+                    onUserChange({
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        role: 'client'
+                    });
+                }
+            } catch (error) {
+                console.error("[AuthService] Error al leer Firestore:", error.message);
+                // Si falla Firestore, al menos devolvemos el usuario básico de Auth
                 onUserChange({
                     uid: currentUser.uid,
                     email: currentUser.email,

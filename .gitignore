@@ -9,7 +9,7 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Native - Archivos de certificados y temporales
 .kotlin/
 *.orig.*
 *.jks
@@ -31,7 +31,8 @@ yarn-error.*
 *.pem
 
 # local env files
-.env
+# Descomenta .env si quieres subir tus credenciales (no recomendado para repos públicos)
+# .env
 .env*.local
 
 # typescript
@@ -39,4 +40,19 @@ yarn-error.*
 
 # generated native folders
 /ios
-/android
+
+# --- CONFIGURACIÓN HÍBRIDA MOTORWASH (Kotlin + React) ---
+# Permitimos la carpeta android pero ignoramos los archivos pesados y locales
+# /android <--- Comentado para permitir subir la lógica de negocio
+
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/release/
+android/app/debug/
+android/*.iml
+android/.idea/
+.cxx/
+*.swp
+*.bak

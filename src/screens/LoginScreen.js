@@ -12,7 +12,9 @@ export default function LoginScreen({ navigation }) {
 
     // Efecto para navegar automáticamente cuando el usuario esté cargado
     React.useEffect(() => {
+        console.log("[LoginScreen] Efecto de usuario disparado. Usuario actual:", user?.email);
         if (user) {
+            console.log("[LoginScreen] Navegando según rol:", user.role);
             if (user.role === 'admin') {
                 navigation.navigate('AdminHome');
             } else if (user.role === 'employee') {
@@ -29,8 +31,10 @@ export default function LoginScreen({ navigation }) {
             return;
         }
 
+        console.log("[LoginScreen] Intentando login para:", email);
         setLoading(true);
         const result = await login(email, password);
+        console.log("[LoginScreen] Resultado del login:", result.success ? "ÉXITO" : "ERROR", result.error || "");
         setLoading(false);
 
         if (!result.success) {
@@ -40,7 +44,6 @@ export default function LoginScreen({ navigation }) {
                 Alert.alert("Error de Inicio de Sesión", result.error);
             }
         }
-        // La navegación ahora la maneja el useEffect arriba para ser más seguro
     };
 
     const handleRegister = () => {

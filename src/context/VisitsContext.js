@@ -5,6 +5,9 @@ import {
     crearVisitaInDB, completarVisitaInDB,
     listenToUserVisits
 } from '../services/VisitsService';
+// 🔗 Importamos las funciones de lógica de negocio desde el puente Kotlin
+import { validarNuevaVisita, validarTransicionEstado } from '../native/NativeBridge';
+
 export const VisitsContext = createContext();
 
 export const VisitsProvider = ({ children }) => {
@@ -32,6 +35,12 @@ export const VisitsProvider = ({ children }) => {
     const addVisit = async (nuevaVisita) => {
         if (!user) return { success: false, error: 'No user' };
 
+        // 🔗 KOTLIN: Valida los datos antes de tocar Firebase
+        const validacion = await validarNuevaVisita(nuevaVisita);
+        if (!validacion.esValida) {
+            return { success: false, error: validacion.errores.join('\n') };
+        }
+
         // Le pasamos la visita completa MÁS unos datos extra al servicio
         const visitaFija = {
             ...nuevaVisita,
@@ -46,21 +55,41 @@ export const VisitsProvider = ({ children }) => {
 
     // Función completar visita
     const completarVisita = async (id) => {
+        // 🔗 KOTLIN: Verifica que la transición de estado sea válida
+        const visita = visitas.find(v => v.id === id);
+        if (visita) {
+            const transicion = await validarTransicionEstado(visita.estado, 'completado');
+            if (!transicion.permitido) {
+                console.warn("Kotlin bloqueó la operación:", transicion.mensaje);
+                return { success: false, error: transicion.mensaje };
+            }
+        }
         const result = await completarVisitaInDB(id);
-        if (!result.success) console.error("Error al completar visitia:", result.error);
-    }
+        if (!result.success) console.error("Error al completar visita:", result.error);
+        return result;
+    };
 
     // Función iniciar visita
     const iniciarVisita = async (id, nombreEncargado = null) => {
+        // 🔗 KOTLIN: Verifica que la transición de estado sea válida
+        const visita = visitas.find(v => v.id === id);
+        if (visita) {
+            const transicion = await validarTransicionEstado(visita.estado, 'en_progreso');
+            if (!transicion.permitido) {
+                console.warn("Kotlin bloqueó la operación:", transicion.mensaje);
+                return { success: false, error: transicion.mensaje };
+            }
+        }
         const result = await iniciarVisitaInDB(id, nombreEncargado);
-        if (!result.success) console.error("Erroral iniciar visita:", result.error);
-    }
+        if (!result.success) console.error("Error al iniciar visita:", result.error);
+        return result;
+    };
 
     // Calificar visita
     const calificarVisita = async (id, estrellas, comentario) => {
         const result = await calificarVisitaInDB(id, estrellas, comentario);
         if (!result.success) console.error("Error al calificar la visita:", result.error);
-    }
+    };
 
     return (
         <VisitsContext.Provider value={{
@@ -69,6 +98,6 @@ export const VisitsProvider = ({ children }) => {
             iniciarVisita, calificarVisita
         }}>
             {children}
-
-        </VisitsContext.Provider>);
+        </VisitsContext.Provider>
+    );
 };
