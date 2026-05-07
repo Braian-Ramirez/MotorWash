@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { UsersContext } from '../context/UserContext';
+import { UsersContext } from '../application/context/UserContext';
 
 export default function ManageUsersScreen({ navigation }) {
     const { usuarios } = useContext(UsersContext);

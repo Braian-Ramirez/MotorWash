@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
 // Importamos el Picker que instalaste
 import { Picker } from '@react-native-picker/picker';
-import { VehiclesContext } from '../context/VehiclesContext';
+import { VehiclesContext } from '../application/context/VehiclesContext';
 
 // Ahora recibimos "route" además de "navigation"
 export default function AddVehicleScreen({ route, navigation }) {

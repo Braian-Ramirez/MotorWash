@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { ServicesContext } from '../context/ServicesContext';
+import { ServicesContext } from '../application/context/ServicesContext';
 
 export default function ManageServicesScreen({ navigation }) {
     const { servicios, actualizarServicio } = useContext(ServicesContext);
@@ -27,6 +27,11 @@ export default function ManageServicesScreen({ navigation }) {
                                 <MaterialCommunityIcons name="clock-outline" size={14} color="#666" />
                                 <Text style={{ fontSize: 13, color: '#666', marginLeft: 4 }}>
                                     {s.tiempoEstimado ? `${s.tiempoEstimado} min` : 'No definido'}
+                                </Text>
+                            </View>
+                            <View style={styles.badgeContainer}>
+                                <Text style={styles.badgeText}>
+                                    {s.tipoVehiculo ? `Aplica: ${s.tipoVehiculo}` : 'Aplica: Todos'}
                                 </Text>
                             </View>
                         </View>
@@ -64,6 +69,8 @@ const styles = StyleSheet.create({
     serviceTitle: { fontSize: 17, fontWeight: 'bold', color: '#333' },
     serviceDesc: { fontSize: 13, color: '#666', marginVertical: 3 },
     servicePrice: { fontSize: 15, fontWeight: 'bold', color: '#4caf50' },
+    badgeContainer: { backgroundColor: '#e8eaf6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginTop: 5 },
+    badgeText: { fontSize: 11, color: '#1a237e', fontWeight: 'bold' },
     priceButton: { backgroundColor: '#1a237e', padding: 10, borderRadius: 8, marginLeft: 10 },
     addButton: {
         backgroundColor: '#fff',

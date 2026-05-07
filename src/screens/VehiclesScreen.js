@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 // ScrollView permite que la pantalla se pueda deslizar si hay muchas tarjetas
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { VehiclesContext } from '../context/VehiclesContext';
+import { VehiclesContext } from '../application/context/VehiclesContext';
 
 export default function VehiclesScreen({ navigation }) {
 

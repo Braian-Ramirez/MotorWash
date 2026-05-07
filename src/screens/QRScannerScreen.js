@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { Text, View, StyleSheet, Button, TouchableOpacity, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { VisitsContext } from '../context/VisitsContext';
-import { AuthContext } from '../context/AuthContext'; // Importado para saber quién escanea
+import { VisitsContext } from '../application/context/VisitsContext';
+import { AuthContext } from '../application/context/AuthContext'; // Importado para saber quién escanea
 
 export default function QRScannerScreen({ navigation }) {
     const [permission, requestPermission] = useCameraPermissions();

@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { UsersContext } from '../context/UserContext';
+import { UsersContext } from '../application/context/UserContext';
 
 export default function EditUserRoleScreen({ route, navigation }) {
     const { user } = route.params;

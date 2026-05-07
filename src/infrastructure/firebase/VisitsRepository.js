@@ -1,15 +1,26 @@
+/**
+ * INFRAESTRUCTURA — Repositorio de Visitas
+ *
+ * Responsabilidad: CRUD de visitas contra Firebase Firestore.
+ * NO aplica reglas de negocio (eso es responsabilidad del dominio/Kotlin).
+ *
+ * Capa: Infrastructure → Firebase
+ */
 import { db } from '../config/firebase';
 import { collection, onSnapshot, query, where, addDoc, updateDoc, doc } from 'firebase/firestore';
 
 const COLLECTION_NAME = "visitas";
 
-// Sincronización en tiempo real (Listener)
+/**
+ * Escucha en tiempo real las visitas según el rol del usuario.
+ * - client: solo sus propias visitas
+ * - employee/admin: todas las visitas
+ * @returns {Function} unsubscribe
+ */
 export const listenToUserVisits = (user, onDataUpdate) => {
-    if (!user) return () => { };
+    if (!user) return () => {};
 
-    let q = collection(db, COLLECTION_NAME); // Por defecto, preparamos toda la colección (para admin/empleado)
-
-    // PERO si el usuario es cliente, le ponemos el filtro de "solo las mías"
+    let q = collection(db, COLLECTION_NAME);
     if (user.role === 'client') {
         q = query(collection(db, COLLECTION_NAME), where("userId", "==", user.uid));
     }
@@ -19,72 +30,69 @@ export const listenToUserVisits = (user, onDataUpdate) => {
         querySnapshot.forEach((doc) => {
             lista.push({ ...doc.data(), id: doc.id });
         });
-        onDataUpdate(lista); // Le pasamos los datos hacia arriba (al Context)
+        onDataUpdate(lista);
     });
 
     return unsubscribe;
 };
 
-//  Crear
+/**
+ * Crea un nuevo documento de visita en Firestore.
+ */
 export const crearVisitaInDB = async (visitaData, userId) => {
     try {
         const docRef = await addDoc(collection(db, COLLECTION_NAME), {
             ...visitaData,
-            userId: userId
+            userId
         });
         return { success: true, id: docRef.id };
     } catch (error) {
-        console.error("Error en Modelo (createVisit):", error);
+        console.error("[VisitsRepository] Error al crear visita:", error);
         return { success: false, error: error.message };
     }
 };
 
-// completar visita
+/**
+ * Marca una visita como completada.
+ */
 export const completarVisitaInDB = async (visitaId) => {
     try {
-        const docRef = doc(db, COLLECTION_NAME, visitaId);
-        await updateDoc(docRef, { estado: 'completado' });
+        await updateDoc(doc(db, COLLECTION_NAME, visitaId), { estado: 'completado' });
         return { success: true };
     } catch (error) {
-        console.error("Error al completar visita:", error);
+        console.error("[VisitsRepository] Error al completar visita:", error);
         return { success: false, error: error.message };
     }
 };
 
-// Iniciar visita y asignar empleado
+/**
+ * Inicia una visita, asignando encargado y hora de inicio.
+ */
 export const iniciarVisitaInDB = async (visitaId, nombreEmpleado = null) => {
     try {
-        const docRef = doc(db, COLLECTION_NAME, visitaId);
-        
-        const updateData = {
-            estado: 'en_progreso',
-            horaInicio: Date.now()
-        };
-        
-        if (nombreEmpleado) {
-             updateData.encargado = nombreEmpleado;
-        }
-
-        await updateDoc(docRef, updateData);
+        const updateData = { estado: 'en_progreso', horaInicio: Date.now() };
+        if (nombreEmpleado) updateData.encargado = nombreEmpleado;
+        await updateDoc(doc(db, COLLECTION_NAME, visitaId), updateData);
         return { success: true };
     } catch (error) {
-        console.error("Error al iniciar visita:", error);
+        console.error("[VisitsRepository] Error al iniciar visita:", error);
         return { success: false, error: error.message };
     }
 };
 
-// Calificar visita 
+/**
+ * Registra la calificación y comentario de una visita completada.
+ */
 export const calificarVisitaInDB = async (visitaId, calificacion, comentario) => {
     try {
-        const docRef = doc(db, COLLECTION_NAME, visitaId);
-        await updateDoc(docRef, {
-            calificacion: calificacion,
-            comentario: comentario,
+        await updateDoc(doc(db, COLLECTION_NAME, visitaId), {
+            calificacion,
+            comentario,
             estado: 'completado'
         });
         return { success: true };
     } catch (error) {
-        console.error("Error al calificar visita:", error);
+        console.error("[VisitsRepository] Error al calificar visita:", error);
         return { success: false, error: error.message };
     }
 };

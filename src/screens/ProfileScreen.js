@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../application/context/AuthContext';
 
 export default function ProfileScreen({ navigation }) {
     const { logout, user, updateProfile, changePassword } = useContext(AuthContext);

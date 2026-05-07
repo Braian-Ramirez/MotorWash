@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { ServicesContext } from '../context/ServicesContext';
+import { Picker } from '@react-native-picker/picker';
+import { ServicesContext } from '../application/context/ServicesContext';
 
 export default function EditServiceScreen({ route, navigation }) {
     const servicioAEditar = route.params?.servicioAEditar;
@@ -12,6 +13,7 @@ export default function EditServiceScreen({ route, navigation }) {
     const [descripcion, setDescripcion] = useState(servicioAEditar ? servicioAEditar.descripcion : '');
     const [precio, setPrecio] = useState(servicioAEditar ? servicioAEditar.precio.toString() : '');
     const [tiempoEstimado, setTiempoEstimado] = useState(servicioAEditar && servicioAEditar.tiempoEstimado ? servicioAEditar.tiempoEstimado.toString() : '');
+    const [tipoVehiculo, setTipoVehiculo] = useState(servicioAEditar && servicioAEditar.tipoVehiculo ? servicioAEditar.tipoVehiculo : 'Todos');
 
     const handleSave = () => {
         // TAREA: Valida que los campos no estén vacíos
@@ -24,7 +26,8 @@ export default function EditServiceScreen({ route, navigation }) {
             titulo, 
             descripcion, 
             precio: parseFloat(precio),
-            tiempoEstimado: parseInt(tiempoEstimado, 10)
+            tiempoEstimado: parseInt(tiempoEstimado, 10),
+            tipoVehiculo
         };
 
         if (servicioAEditar) {
@@ -53,6 +56,20 @@ export default function EditServiceScreen({ route, navigation }) {
             <Text style={styles.label}>Tiempo Estimado (Minutos):</Text>
             <TextInput style={styles.input} value={tiempoEstimado} onChangeText={setTiempoEstimado} keyboardType="numeric" placeholder="Ej: 45" />
 
+            <Text style={styles.label}>Aplica para Vehículo:</Text>
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={tipoVehiculo}
+                    onValueChange={(itemValue) => setTipoVehiculo(itemValue)}
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Todos los Vehículos" value="Todos" />
+                    <Picker.Item label="Moto" value="Moto" />
+                    <Picker.Item label="Carro" value="Carro" />
+                    <Picker.Item label="Camioneta" value="Camioneta" />
+                </Picker>
+            </View>
+
             <TouchableOpacity style={styles.button} onPress={handleSave}>
                 <Text style={styles.buttonText}>Guardar Cambios</Text>
             </TouchableOpacity>
@@ -65,6 +82,8 @@ const styles = StyleSheet.create({
     title: { fontSize: 24, fontWeight: 'bold', color: '#1a237e', marginBottom: 20, textAlign: 'center' },
     label: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 5 },
     input: { backgroundColor: '#fff', borderRadius: 8, padding: 15, marginBottom: 15, borderWidth: 1, borderColor: '#ddd' },
-    button: { backgroundColor: '#1a237e', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+    pickerContainer: { backgroundColor: '#fff', borderRadius: 8, marginBottom: 15, borderWidth: 1, borderColor: '#ddd', height: 55, justifyContent: 'center' },
+    picker: { width: '100%' },
+    button: { backgroundColor: '#1a237e', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10, marginBottom: 40 },
     buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
 });

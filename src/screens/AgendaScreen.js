@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 // Reutilizamos la misma librería de íconos
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { VisitsContext } from '../context/VisitsContext';
+import { VisitsContext } from '../application/context/VisitsContext';
 
 export default function AgendaScreen({ navigation }) {
     // Extraemos la lista real de visitas y la función de calificación

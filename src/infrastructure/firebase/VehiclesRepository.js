@@ -1,59 +1,68 @@
+/**
+ * INFRAESTRUCTURA — Repositorio de Vehículos
+ *
+ * Responsabilidad: CRUD de vehículos contra Firebase Firestore.
+ * NO valida datos (eso es responsabilidad del dominio/Kotlin).
+ *
+ * Capa: Infrastructure → Firebase
+ */
 import { db } from '../config/firebase';
 import { collection, onSnapshot, query, where, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 
 const COLLECTION_NAME = "vehiculos";
 
-// Sincronización en tiempo real (Listener)
+/**
+ * Escucha en tiempo real los vehículos del usuario autenticado.
+ * @returns {Function} unsubscribe
+ */
 export const listenToUserVehicles = (userId, onDataUpdate) => {
-    if (!userId) return () => { };
-
+    if (!userId) return () => {};
     const q = query(collection(db, COLLECTION_NAME), where("userId", "==", userId));
-
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const lista = [];
         querySnapshot.forEach((doc) => {
             lista.push({ ...doc.data(), id: doc.id });
         });
-        onDataUpdate(lista); // Le pasamos los datos hacia arriba (al Context)
+        onDataUpdate(lista);
     });
-
-    return unsubscribe; // Retornamos la función para apagar el listener cuando sea necesario
+    return unsubscribe;
 };
 
-//  Crear
+/**
+ * Crea un nuevo vehículo asociado a un usuario.
+ */
 export const createVehicleInDB = async (vehiculoData, userId) => {
     try {
-        const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-            ...vehiculoData,
-            userId: userId
-        });
+        const docRef = await addDoc(collection(db, COLLECTION_NAME), { ...vehiculoData, userId });
         return { success: true, id: docRef.id };
     } catch (error) {
-        console.error("Error en Modelo (createVehicle):", error);
+        console.error("[VehiclesRepository] Error al crear vehículo:", error);
         return { success: false, error: error.message };
     }
 };
 
-//  Actualizar
+/**
+ * Actualiza los datos de un vehículo existente.
+ */
 export const updateVehicleInDB = async (vehiculoId, nuevosDatos) => {
     try {
-        const docRef = doc(db, COLLECTION_NAME, vehiculoId);
-        await updateDoc(docRef, nuevosDatos);
+        await updateDoc(doc(db, COLLECTION_NAME, vehiculoId), nuevosDatos);
         return { success: true };
     } catch (error) {
-        console.error("Error en Modelo (updateVehicle):", error);
+        console.error("[VehiclesRepository] Error al actualizar vehículo:", error);
         return { success: false, error: error.message };
     }
 };
 
-//  Eliminar
+/**
+ * Elimina un vehículo de la base de datos.
+ */
 export const deleteVehicleFromDB = async (vehiculoId) => {
     try {
-        const docRef = doc(db, COLLECTION_NAME, vehiculoId);
-        await deleteDoc(docRef);
+        await deleteDoc(doc(db, COLLECTION_NAME, vehiculoId));
         return { success: true };
     } catch (error) {
-        console.error("Error en Modelo (deleteVehicle):", error);
+        console.error("[VehiclesRepository] Error al eliminar vehículo:", error);
         return { success: false, error: error.message };
     }
 };

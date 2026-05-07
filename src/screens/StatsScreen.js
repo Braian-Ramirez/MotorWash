@@ -2,8 +2,8 @@ import React, { useContext, useState, useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker'; // Importamos el selector
-import { VisitsContext } from '../context/VisitsContext';
-import { ServicesContext } from '../context/ServicesContext';
+import { VisitsContext } from '../application/context/VisitsContext';
+import { ServicesContext } from '../application/context/ServicesContext';
 
 export default function StatsScreen() {
     const { visitas } = useContext(VisitsContext);

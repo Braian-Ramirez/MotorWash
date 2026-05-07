@@ -1,3 +1,12 @@
+/**
+ * INFRAESTRUCTURA — Configuración de Firebase
+ *
+ * Responsabilidad: Inicializar y exportar las instancias de Firebase.
+ * Esta capa NO contiene lógica de negocio. Solo configura la conexión
+ * con el proveedor externo (Firebase).
+ *
+ * Capa: Infrastructure → Config
+ */
 import { initializeApp } from "firebase/app";
 import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -14,7 +23,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Inicializamos Auth con persistencia en React Native
 export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage)
 });

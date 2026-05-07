@@ -30,42 +30,29 @@ class VisitsBusinessModule(reactContext: ReactApplicationContext)
     /**
      * REGLA 1: Calcular el precio final de una visita.
      *
-     * JavaScript envía el precio base del servicio (obtenido de Firebase)
-     * y el tipo de vehículo. Kotlin aplica los recargos según las reglas
-     * de negocio del autolavado y devuelve el precio final.
+     * Debido a la nueva regla de negocio (Enfoque 2), los precios ahora son estáticos
+     * y configurados por el administrador para tipos de vehículos específicos.
+     * Ya no se aplican multiplicadores genéricos. Kotlin se encarga de validar 
+     * que el precio base proporcionado sea válido y lo establece como precio final.
      *
-     * Recargos aplicados:
-     *  - Sedán/Hatchback: sin recargo (precio base)
-     *  - SUV/Camioneta: +25%
-     *  - Pickup/Van: +40%
-     *  - Bus/Camión: +80%
-     *
-     * @param precioBase Precio base del servicio (Double)
-     * @param tipoVehiculo Tipo de vehículo ("Sedán", "SUV", "Pickup", etc.)
+     * @param precioBase Precio exacto del servicio (Double)
+     * @param tipoVehiculo Tipo de vehículo (String) - solo para fines de log/metadata
      * @param promise Devuelve el precio final (Double) a JavaScript
      */
     @ReactMethod
     fun calcularPrecioFinal(precioBase: Double, tipoVehiculo: String, promise: Promise) {
         try {
-            // Factor de recargo según el tamaño del vehículo
-            val factor = when (tipoVehiculo.lowercase().trim()) {
-                "sedán", "sedan", "hatchback", "coupé", "coupe" -> 1.0
-                "suv", "camioneta", "crossover"                  -> 1.25
-                "pickup", "van", "minivan"                       -> 1.40
-                "bus", "camión", "camion", "furgón", "furgon"   -> 1.80
-                else                                              -> 1.0  // tipo desconocido: sin recargo
-            }
-
-            val precioFinal = precioBase * factor
+            // El precio final es exactamente el configurado por el administrador
+            val precioFinal = precioBase
 
             // Construimos la respuesta como un mapa para enviar más info a JS
             val resultado = WritableNativeMap().apply {
                 putDouble("precioFinal", precioFinal)
                 putDouble("precioBase", precioBase)
-                putDouble("factor", factor)
+                putDouble("factor", 1.0)
                 putString("tipoVehiculo", tipoVehiculo)
-                // Si hubo recargo, enviamos el porcentaje para mostrarlo en UI
-                putInt("recargoPorcentaje", ((factor - 1.0) * 100).toInt())
+                // Ya no hay recargo extra
+                putInt("recargoPorcentaje", 0)
             }
 
             promise.resolve(resultado)

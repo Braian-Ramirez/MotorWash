@@ -2,12 +2,12 @@ import React, { useState, useContext, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { VisitsContext } from '../context/VisitsContext';
-import { VehiclesContext } from '../context/VehiclesContext';
-import { ServicesContext } from '../context/ServicesContext';
-import { UsersContext } from '../context/UserContext';
-// 🔗 Kotlin: cálculo de precio con recargo por tipo de vehículo
-import { calcularPrecioFinal } from '../native/NativeBridge';
+import { VisitsContext } from '../application/context/VisitsContext';
+import { VehiclesContext } from '../application/context/VehiclesContext';
+import { ServicesContext } from '../application/context/ServicesContext';
+import { UsersContext } from '../application/context/UserContext';
+// 🔗 Kotlin: validación final del precio (sin recargos)
+import { calcularPrecioFinal } from '../infrastructure/native/NativeBridge';
 
 export default function NewVisitScreen({ navigation }) {
 
@@ -43,13 +43,31 @@ export default function NewVisitScreen({ navigation }) {
         }
     }, [vehiculos, servicios]);
 
-    // 3. KOTLIN: Recalcula el precio cada vez que cambia el vehículo o el servicio
+    // 3. Filtramos servicios y seleccionamos uno por defecto si es necesario
+    const serviciosFiltrados = servicios.filter(s => 
+        !s.tipoVehiculo || s.tipoVehiculo === 'Todos' || s.tipoVehiculo === tipoVehiculo
+    );
+
+    useEffect(() => {
+        if (serviciosFiltrados.length > 0) {
+            // Si el servicio actual no está en la lista filtrada, cambiamos al primero
+            const existe = serviciosFiltrados.find(s => s.titulo === tipoLavado);
+            if (!existe) setTipoLavado(serviciosFiltrados[0].titulo);
+        } else {
+            setTipoLavado('');
+        }
+    }, [tipoVehiculo, serviciosFiltrados]);
+
+    // 4. KOTLIN: Valida el precio exacto
     useEffect(() => {
         const recalcular = async () => {
-            const servicioElegido = servicios.find(s => s.titulo === tipoLavado);
-            if (!servicioElegido || !tipoVehiculo) return;
+            const servicioElegido = serviciosFiltrados.find(s => s.titulo === tipoLavado);
+            if (!servicioElegido || !tipoVehiculo) {
+                setPrecioInfo({ precioFinal: 0, recargoPorcentaje: 0 });
+                return;
+            }
 
-            // 🔗 Delegamos el cálculo a Kotlin
+            // 🔗 Kotlin ahora solo valida el precio sin aplicar recargos extra
             const resultado = await calcularPrecioFinal(
                 servicioElegido.precio,
                 tipoVehiculo
@@ -57,7 +75,7 @@ export default function NewVisitScreen({ navigation }) {
             setPrecioInfo(resultado);
         };
         recalcular();
-    }, [tipoLavado, tipoVehiculo, servicios]);
+    }, [tipoLavado, tipoVehiculo, serviciosFiltrados]);
 
     // 3. Funciones del calendario
     const onChangeDate = (event, selectedDate) => {
@@ -149,26 +167,25 @@ export default function NewVisitScreen({ navigation }) {
 
                 <Text style={styles.label}>Servicio:</Text>
                 <View style={styles.pickerContainer}>
-                    <Picker selectedValue={tipoLavado} onValueChange={setTipoLavado}>
-                        {servicios.map((s) => (
-                            <Picker.Item
-                                key={s.id}
-                                label={`${s.titulo} ($${s.precio})`}
-                                value={s.titulo}
-                            />
-                        ))}
-                    </Picker>
+                    {serviciosFiltrados.length > 0 ? (
+                        <Picker selectedValue={tipoLavado} onValueChange={setTipoLavado}>
+                            {serviciosFiltrados.map((s) => (
+                                <Picker.Item
+                                    key={s.id}
+                                    label={`${s.titulo} ($${s.precio})`}
+                                    value={s.titulo}
+                                />
+                            ))}
+                        </Picker>
+                    ) : (
+                        <Text style={{ padding: 15, color: '#666' }}>No hay servicios para este vehículo.</Text>
+                    )}
                 </View>
 
-                {/* 🔗 Precio calculado por Kotlin con recargo por tipo de vehículo */}
+                {/* 🔗 Precio final validado por Kotlin */}
                 <View style={styles.precioContainer}>
-                    <Text style={styles.precioLabel}>Precio total estimado:</Text>
+                    <Text style={styles.precioLabel}>Precio final:</Text>
                     <Text style={styles.precioValor}>${precioInfo.precioFinal?.toFixed(2) ?? '0.00'}</Text>
-                    {precioInfo.recargoPorcentaje > 0 && (
-                        <Text style={styles.recargoBadge}>
-                            +{precioInfo.recargoPorcentaje}% recargo por tipo de vehículo
-                        </Text>
-                    )}
                 </View>
             </View>
 

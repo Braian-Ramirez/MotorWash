@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../application/context/AuthContext';
 
 export default function RegisterScreen({ navigation }) {
     const { register } = useContext(AuthContext);

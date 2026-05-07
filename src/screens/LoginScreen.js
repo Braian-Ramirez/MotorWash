@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../application/context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');

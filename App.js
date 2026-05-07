@@ -19,12 +19,12 @@ import ClientTabs from './src/navigation/ClientTabs';
 import EmployeeTabs from './src/navigation/EmployeeTabs';
 import AdminTabs from './src/navigation/AdminTabs';
 
-// Contextos
-import { AuthProvider, AuthContext } from './src/context/AuthContext';
-import { VehiclesProvider } from './src/context/VehiclesContext';
-import { VisitsProvider } from './src/context/VisitsContext';
-import { UsersProvider } from './src/context/UserContext';
-import { ServicesProvider } from './src/context/ServicesContext';
+// Contextos (Application Layer — Clean Architecture)
+import { AuthProvider, AuthContext } from './src/application/context/AuthContext';
+import { VehiclesProvider } from './src/application/context/VehiclesContext';
+import { VisitsProvider } from './src/application/context/VisitsContext';
+import { UsersProvider } from './src/application/context/UserContext';
+import { ServicesProvider } from './src/application/context/ServicesContext';
 
 const Stack = createNativeStackNavigator();
 
