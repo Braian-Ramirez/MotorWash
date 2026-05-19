@@ -63,6 +63,70 @@ export const validarNuevaVisita = (visitaData) => {
     if (!visitaData.tipoLavado?.trim()) errores.push('Debes seleccionar un tipo de lavado.');
     if (!visitaData.fecha?.trim())      errores.push('La fecha de la cita es obligatoria.');
     if (!visitaData.precio || visitaData.precio <= 0) errores.push('El precio del servicio no es válido.');
+
+    if (visitaData.fecha) {
+        let fechaCita;
+        let tieneHora = false;
+        
+        let fechaParte = visitaData.fecha;
+        let horaParte = '';
+        
+        if (visitaData.fecha.includes(' ')) {
+            const partesEspacio = visitaData.fecha.split(' ');
+            fechaParte = partesEspacio[0];
+            horaParte = partesEspacio[1];
+        }
+
+        if (fechaParte.includes('/')) {
+            const partes = fechaParte.split('/');
+            if (partes.length === 3) {
+                const dia = parseInt(partes[0], 10);
+                const mes = parseInt(partes[1], 10) - 1; // 0-indexed
+                const anio = parseInt(partes[2], 10);
+                
+                let hora = 0;
+                let minuto = 0;
+                if (horaParte && horaParte.includes(':')) {
+                    const partesHora = horaParte.split(':');
+                    if (partesHora.length >= 2) {
+                        hora = parseInt(partesHora[0], 10);
+                        minuto = parseInt(partesHora[1], 10);
+                        tieneHora = true;
+                    }
+                }
+                fechaCita = new Date(anio, mes, dia, hora, minuto);
+            }
+        }
+        
+        if (!fechaCita || isNaN(fechaCita.getTime())) {
+            fechaCita = new Date(visitaData.fecha);
+            tieneHora = visitaData.fecha.includes(':');
+        }
+
+        if (!isNaN(fechaCita.getTime())) {
+            const hoy = new Date();
+            hoy.setSeconds(0, 0);
+            fechaCita.setSeconds(0, 0);
+            const limitePasado = new Date(hoy.getTime() - 24 * 60 * 60 * 1000);
+
+            if (fechaCita.getTime() < limitePasado.getTime()) {
+                errores.push('La fecha de la cita debe ser igual o superior a la fecha actual.');
+            } else {
+                const hoySoloFecha = new Date(hoy);
+                hoySoloFecha.setHours(0, 0, 0, 0);
+                
+                const citaSoloFecha = new Date(fechaCita);
+                citaSoloFecha.setHours(0, 0, 0, 0);
+
+                if (citaSoloFecha.getTime() === hoySoloFecha.getTime()) {
+                    if (tieneHora && fechaCita.getTime() < hoy.getTime()) {
+                        errores.push('La hora de la cita no puede ser anterior a la hora actual.');
+                    }
+                }
+            }
+        }
+    }
+
     return { esValida: errores.length === 0, errores };
 };
 

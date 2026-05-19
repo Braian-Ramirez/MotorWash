@@ -38,12 +38,14 @@ export default function HistoryScreen() {
             {trabajosCompletados.map((job) => (
                 <View key={job.id} style={styles.jobCard}>
                     <View style={styles.cardHeader}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 10 }}>
                             <MaterialCommunityIcons name={getIconForType(job.vehiculo)} size={22} color="#3b5998" style={{ marginRight: 5 }} />
                             <Text style={styles.vehicleText} numberOfLines={1}>{job.vehiculo}</Text>
                         </View>
-                        <MaterialCommunityIcons name="clock-outline" size={20} color="#666" />
-                        <Text style={styles.timeText}>{job.fecha}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MaterialCommunityIcons name="clock-outline" size={18} color="#666" style={{ marginRight: 4 }} />
+                            <Text style={styles.timeText}>{job.fecha}</Text>
+                        </View>
                     </View>
 
                     {/* Detalles del Servicio */}
@@ -101,7 +103,7 @@ const styles = StyleSheet.create({
         borderLeftColor: '#3b5998', // Borde azul de "trabajo"
     },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-    vehicleText: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+    vehicleText: { fontSize: 18, fontWeight: 'bold', color: '#333', flex: 1 },
     timeText: { fontSize: 14, color: '#666' },
     serviceText: { fontSize: 15, color: '#444', marginBottom: 5 },
     atendanteText: { fontSize: 14, color: '#666', marginBottom: 15 },

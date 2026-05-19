@@ -92,6 +92,80 @@ class VisitsBusinessModule(reactContext: ReactApplicationContext)
             val fecha = visitaData.getString("fecha") ?: ""
             if (fecha.isBlank()) {
                 errores.add("La fecha de la cita es obligatoria.")
+            } else {
+                try {
+                    val hoy = java.util.Calendar.getInstance().apply {
+                        set(java.util.Calendar.HOUR_OF_DAY, 0)
+                        set(java.util.Calendar.MINUTE, 0)
+                        set(java.util.Calendar.SECOND, 0)
+                        set(java.util.Calendar.MILLISECOND, 0)
+                    }
+
+                    val calCita = java.util.Calendar.getInstance()
+                    var parseado = false
+                    var tieneHora = false
+                    var hora = 0
+                    var minuto = 0
+
+                    var fechaParte = fecha
+                    var horaParte = ""
+
+                    if (fecha.contains(" ")) {
+                        val partesEspacio = fecha.split(" ")
+                        if (partesEspacio.size >= 2) {
+                            fechaParte = partesEspacio[0]
+                            horaParte = partesEspacio[1]
+                        }
+                    }
+
+                    if (horaParte.contains(":")) {
+                        val partesHora = horaParte.split(":")
+                        if (partesHora.size >= 2) {
+                            val h = partesHora[0].toIntOrNull()
+                            val m = partesHora[1].toIntOrNull()
+                            if (h != null && m != null) {
+                                hora = h
+                                minuto = m
+                                tieneHora = true
+                            }
+                        }
+                    }
+
+                    if (fechaParte.contains("/")) {
+                        val partes = fechaParte.split("/")
+                        if (partes.size == 3) {
+                            val dia = partes[0].toIntOrNull()
+                            val mes = partes[1].toIntOrNull()
+                            val anio = partes[2].toIntOrNull()
+                            if (dia != null && mes != null && anio != null) {
+                                val realMes = if (mes > 12) dia - 1 else mes - 1
+                                val realDia = if (mes > 12) mes else dia
+                                val realAnio = if (anio < 100) 2000 + anio else anio
+                                
+                                calCita.set(realAnio, realMes, realDia, hora, minuto, 0)
+                                calCita.set(java.util.Calendar.MILLISECOND, 0)
+                                parseado = true
+                            }
+                        }
+                    } else if (fechaParte.contains("-")) {
+                        val partes = fechaParte.split("-")
+                        if (partes.size == 3) {
+                            val anio = partes[0].toIntOrNull()
+                            val mes = partes[1].toIntOrNull()
+                            val dia = partes[2].toIntOrNull()
+                            if (anio != null && mes != null && dia != null) {
+                                val realAnio = if (anio < 100) 2000 + anio else anio
+                                calCita.set(realAnio, mes - 1, dia, hora, minuto, 0)
+                                calCita.set(java.util.Calendar.MILLISECOND, 0)
+                                parseado = true
+                            }
+                        }
+                    }
+                    // La validación de fechas (pasado, futuro) ahora se delega 100% a la capa de Reglas de Negocio en JavaScript (StateRules.js) 
+                    // ya que JS tiene el contexto exacto de la zona horaria del usuario (ej: UTC-5) y evita falsos positivos del emulador en UTC.
+                } catch (e: Exception) {
+                    // No bloqueamos por fecha inválida si ocurre un error de parseo
+                }
             }
 
             // Verificar precio mayor a cero

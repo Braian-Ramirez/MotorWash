@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { VisitsContext } from '../application/context/VisitsContext';
 import { VehiclesContext } from '../application/context/VehiclesContext';
 import { ServicesContext } from '../application/context/ServicesContext';
@@ -79,21 +79,84 @@ export default function NewVisitScreen({ navigation }) {
 
     // 3. Funciones del calendario
     const onChangeDate = (event, selectedDate) => {
-        const currentDate = selectedDate || date;
-        setShowPicker(Platform.OS === 'ios');
-        setDate(currentDate);
+        if (Platform.OS === 'ios') {
+            setShowPicker(false);
+        }
+
+        if (event.type === 'dismissed' || !selectedDate) {
+            return;
+        }
+
+        setDate(selectedDate);
     };
 
     const showMode = (currentMode) => {
-        setShowPicker(true);
-        setMode(currentMode);
+        if (Platform.OS === 'android') {
+            DateTimePickerAndroid.open({
+                value: date,
+                onChange: (event, selectedDate) => {
+                    if (event.type === 'set' && selectedDate) {
+                        setDate(selectedDate);
+                    }
+                },
+                mode: currentMode,
+                is24Hour: true,
+            });
+        } else {
+            setMode(currentMode);
+            setShowPicker(true);
+        }
     };
 
     const handleSave = async () => {
+        const hoy = new Date();
+        hoy.setSeconds(0, 0);
+
+        let fechaCita = new Date(date);
+        fechaCita.setSeconds(0, 0);
+        if (Platform.OS === 'web') {
+            if (fechaWeb.includes('/')) {
+                const partes = fechaWeb.split('/');
+                if (partes.length === 3) {
+                    const dia = parseInt(partes[0], 10);
+                    const mes = parseInt(partes[1], 10) - 1;
+                    const anio = parseInt(partes[2], 10);
+                    fechaCita = new Date(anio, mes, dia);
+                }
+            }
+        }
+
+        // Validación local de fecha con tolerancia de 24 horas para desfase de huso horario (ej. UTC vs Local)
+        const limitePasado = new Date(hoy.getTime() - 24 * 60 * 60 * 1000);
+        
+        if (fechaCita.getTime() < limitePasado.getTime()) {
+            alert('La fecha de la cita debe ser igual o superior a la fecha actual.');
+            return;
+        }
+
+        // Si la cita es para hoy mismo (según el día del emulador), validar que la hora no haya pasado
+        const hoySoloFecha = new Date(hoy);
+        hoySoloFecha.setHours(0, 0, 0, 0);
+
+        const citaSoloFecha = new Date(fechaCita);
+        citaSoloFecha.setHours(0, 0, 0, 0);
+
+        if (citaSoloFecha.getTime() === hoySoloFecha.getTime()) {
+            if (fechaCita.getTime() < hoy.getTime()) {
+                alert('La hora de la cita no puede ser anterior a la hora actual.');
+                return;
+            }
+        }
+
         const servicioElegido = servicios.find(s => s.titulo === tipoLavado);
 
+        const pad = (n) => n.toString().padStart(2, '0');
+        const formattedDate = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
         const nuevaCita = {
-            fecha: Platform.OS === 'web' ? fechaWeb : date.toLocaleDateString(),
+            fecha: Platform.OS === 'web' 
+                ? fechaWeb 
+                : formattedDate,
             tipoLavado,
             tiempoEstimado: servicioElegido ? servicioElegido.tiempoEstimado : 30,
             // 🔗 Usamos el precio calculado por Kotlin (con recargo incluido)
@@ -129,7 +192,13 @@ export default function NewVisitScreen({ navigation }) {
                 )}
 
                 {showPicker && (
-                    <DateTimePicker value={date} mode={mode} is24Hour={true} display="default" onChange={onChangeDate} />
+                    <DateTimePicker
+                        value={date}
+                        mode={mode}
+                        is24Hour={true}
+                        display="spinner"
+                        onChange={onChangeDate}
+                    />
                 )}
 
                 <Text style={styles.label}>Encargado:</Text>

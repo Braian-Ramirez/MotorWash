@@ -98,10 +98,10 @@ export default function StatsScreen() {
                     <Text style={styles.filterLabel}>Tiempo:</Text>
                     <View style={styles.pickerWrapper}>
                         <Picker selectedValue={filtroTiempo} onValueChange={setFiltroTiempo} style={styles.picker}>
-                            <Picker.Item label="Todos los tiempos" value="Todos" />
-                            <Picker.Item label="Mismo Día (Hoy)" value="Hoy" />
-                            <Picker.Item label="Últimos 7 días" value="Semana" />
-                            <Picker.Item label="Últimos 30 días" value="Mes" />
+                            <Picker.Item label="Todos" value="Todos" />
+                            <Picker.Item label="Hoy" value="Hoy" />
+                            <Picker.Item label="7 días" value="Semana" />
+                            <Picker.Item label="30 días" value="Mes" />
                         </Picker>
                     </View>
                 </View>

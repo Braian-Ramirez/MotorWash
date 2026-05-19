@@ -75,8 +75,25 @@ export default function AgendaScreen({ navigation }) {
                 <MaterialCommunityIcons name="calendar-clock" size={24} color="#0066cc" />
             </View>
 
-            {/* Ahora recorremos el arreglo de visitas y generamos una tarjeta para cada una */}
-            {visitas.map((visita) => {
+            {/* 4. Botón verde para Agendar (Movido arriba para mayor comodidad) */}
+            <TouchableOpacity style={[styles.addButton, { width: '100%' }]} onPress={handleAgendar}>
+                <Text style={styles.addButtonText}>Agendar Nueva Visita</Text>
+            </TouchableOpacity>
+
+            {/* Ahora recorremos el arreglo de visitas ORDENADO y generamos una tarjeta para cada una */}
+            {[...visitas].sort((a, b) => {
+                // Función para convertir la fecha DD/MM/YYYY HH:mm a un timestamp para comparar
+                const parseDate = (str) => {
+                    if (!str) return 0;
+                    const partes = str.split(' ');
+                    if (partes.length < 2) return 0;
+                    const [dia, mes, anio] = partes[0].split('/');
+                    const [hora, min] = partes[1].split(':');
+                    return new Date(anio, mes - 1, dia, hora, min).getTime();
+                };
+                // Orden descendente (las más recientes arriba)
+                return parseDate(b.fecha) - parseDate(a.fecha);
+            }).map((visita) => {
                 // ---- Lógica del Temporizador ----
                 let tiempoRestanteStr = null;
                 let progressBarWidth = '0%';
@@ -206,11 +223,6 @@ export default function AgendaScreen({ navigation }) {
                     </View>
                 );
             })}
-
-            {/* 4. Botón verde para Agendar */}
-            <TouchableOpacity style={styles.addButton} onPress={handleAgendar}>
-                <Text style={styles.addButtonText}>Agendar Nueva Visita</Text>
-            </TouchableOpacity>
 
         </ScrollView>
     );
